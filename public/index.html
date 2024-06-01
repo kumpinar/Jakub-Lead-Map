@@ -8,6 +8,7 @@
     <link href="https://api.mapbox.com/mapbox-gl-js/v3.4.0/mapbox-gl.css" rel="stylesheet">
     <script src="https://api.mapbox.com/mapbox-gl-js/v3.4.0/mapbox-gl.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/monday-sdk-js/dist/main.js"></script>
+
     <style>
         body {
             margin: 0;
@@ -19,6 +20,101 @@
             top: 0;
             bottom: 0;
             width: 100%;
+        }
+
+        .rounded-rect {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 0 50px -25px black;
+        }
+
+        .flex-center {
+            position: absolute;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .flex-center.left {
+            left: 0px;
+        }
+
+        .sidebar-content {
+            position: absolute;
+            width: 95%;
+            height: 95%;
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 32px;
+            color: gray;
+        }
+
+        .sidebar-toggle {
+            position: absolute;
+            width: 1.3em;
+            height: 1.3em;
+            overflow: visible;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .sidebar-toggle.left {
+            right: -1.5em;
+        }
+
+
+        .sidebar-toggle:hover {
+            color: #0aa1cf;
+            cursor: pointer;
+        }
+
+        .sidebar {
+            transition: transform 1s;
+            z-index: 1;
+            width: 300px;
+            height: 100%;
+        }
+
+        /*
+The sidebar styling has them "expanded" by default, we use CSS transforms to push them offscreen
+The toggleSidebar() function removes this class from the element in order to expand it.
+*/
+        .left.collapsed {
+            transform: translateX(-295px);
+        }
+
+        #colors-legend span {
+            border-radius: 3px;
+            display: inline-block;
+            height: 20px;
+            margin-right: 5px;
+            margin-bottom: 5px;
+            width: 100%;
+            display: block;
+        }
+
+        .legend {
+            font-size: 16px;
+            height: 85%;
+            position: fixed;
+            margin: 5px 5px 5px 5px;
+            overflow: auto;
+            padding: 10px;
+        }
+
+        #countries-legend div span.color {
+            border-radius: 50%;
+            display: inline-block;
+            height: 20px;
+            margin-right: 5px;
+            width: 20px;
+        }
+
+        #title {
+            font-size: 22px;
+            font-weight: bolder;
+            margin-bottom: 10px;
+            text-align: center;
         }
     </style>
     <script type="module">
@@ -43,19 +139,36 @@
 </head>
 
 <body>
-    <style>
-        .mapboxgl-popup {
-            max-width: 400px;
-            font:
-                12px/20px 'Helvetica Neue',
-                Arial,
-                Helvetica,
-                sans-serif;
-        }
-    </style>
-    <div id="map"></div>
+
+    <div id="map">
+        <div id="left" class="sidebar flex-center left collapsed">
+            <div class="sidebar-content rounded-rect flex-center">
+                <div class="legend">
+                    <b>Countries</b>
+                    <div id="countries">
+                        
+
+                    </div>
+                    <b>Industries</b>
+                    <div id="industries">
+                    </div>
+                    <b>Leads</b>
+                    <div id="leads">
+                    </div>
+                    <b>Clients</b>
+                    <div id="clients">
+                    </div>
+                </div>
+                <div id="sidebar-arrow" class="sidebar-toggle rounded-rect left" onclick="toggleSidebar('left')">
+                    &rarr;
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         mapboxgl.accessToken = 'pk.eyJ1IjoieWFycmFyYW5nZXMiLCJhIjoiY2tydHpnM2pwOXdldzJubDM1b2dvcm15cCJ9.sAkVnbCzwrVLLRi7xxiHnA';
+        let mondayToken='';
         // Create a new map.
         const map = new mapboxgl.Map({
             container: 'map',
@@ -69,6 +182,9 @@
         });
 
         map.on('load', () => {
+
+            toggleSidebar('left');
+
             // Add a source for the state polygons.
             map.addSource('states', {
                 'type': 'geojson',
@@ -86,24 +202,10 @@
                 }
             });
 
-            // When a click event occurs on a feature in the states layer,
-            // open a popup at the location of the click, with description
-            // HTML from the click event's properties.
-            map.on('click', 'states-layer', (e) => {
-                new mapboxgl.Popup()
-                    .setLngLat(e.lngLat)
-                    .setHTML(e.features[0].properties.name)
-                    .addTo(map);
-            });
-
-            // Change the cursor to a pointer when
-            // the mouse is over the states layer.
             map.on('mouseenter', 'states-layer', () => {
                 map.getCanvas().style.cursor = 'pointer';
             });
 
-            // Change the cursor back to a pointer
-            // when it leaves the states layer.
             map.on('mouseleave', 'states-layer', () => {
                 map.getCanvas().style.cursor = '';
             });
@@ -132,12 +234,27 @@
 
         monday.api(query, {
             apiVersion: '2023-10',
-            token: 'eyJhbGciOiJIUzI1NiJ9.eyJ0aWQiOjM0MTY4NjA0NiwiYWFpIjoxMSwidWlkIjo1NDk5MzU0OSwiaWFkIjoiMjAyNC0wNC0wM1QxMjo0MzoyOS4wMDBaIiwicGVyIjoibWU6d3JpdGUiLCJhY3RpZCI6MTkxNDQ0MDUsInJnbiI6ImV1YzEifQ.rxlDgiCEBl8syueU69lny_7MIr7Dji6NfbFijbQR_94'
-        })
-            .then(res => {
-                console.log('result');
-                console.log(res);
+            token: mondayToken
+        }).then(res => {
+            console.log('result');
+            console.log(res);
+        });
+
+
+
+
+        function toggleSidebar(id) {
+            const elem = document.getElementById(id);
+            const collapsed = elem.classList.toggle('collapsed');
+            const padding = {};
+            padding[id] = collapsed ? 0 : 300; 
+            const sidebarArrow = document.getElementById('sidebar-arrow');
+            sidebarArrow.innerHTML = collapsed ? '&rarr;' : '&larr;';
+            map.easeTo({
+                padding: padding,
+                duration: 1000 
             });
+        }
     </script>
 
 </body>
