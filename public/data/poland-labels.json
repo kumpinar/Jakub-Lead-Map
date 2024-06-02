@@ -1,0 +1,23 @@
+{
+"type": "FeatureCollection",
+"name": "poland-labels",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+"features": [
+{ "type": "Feature", "properties": { "fid": 1, "name": "Zachodniopomorskie" }, "geometry": { "type": "Point", "coordinates": [ 14.526710799120565, 53.40626343697177 ] } },
+{ "type": "Feature", "properties": { "fid": 2, "name": "Pomorskie" }, "geometry": { "type": "Point", "coordinates": [ 18.1531164, 54.2944252 ] } },
+{ "type": "Feature", "properties": { "fid": 3, "name": "Warmińsko-mazurskie" }, "geometry": { "type": "Point", "coordinates": [ 20.702786, 53.8671117 ] } },
+{ "type": "Feature", "properties": { "fid": 4, "name": "Kujawsko-pomorskie" }, "geometry": { "type": "Point", "coordinates": [ 18.4834224, 53.1648363 ] } },
+{ "type": "Feature", "properties": { "fid": 5, "name": "Podlaskie" }, "geometry": { "type": "Point", "coordinates": [ 23.14025761789485, 53.136562831535151 ] } },
+{ "type": "Feature", "properties": { "fid": 6, "name": "Mazowieckie" }, "geometry": { "type": "Point", "coordinates": [ 21.006277828728216, 52.231877062614551 ] } },
+{ "type": "Feature", "properties": { "fid": 7, "name": "Wielkopolskie" }, "geometry": { "type": "Point", "coordinates": [ 17.3522939, 52.279986 ] } },
+{ "type": "Feature", "properties": { "fid": 8, "name": "Lubuskie" }, "geometry": { "type": "Point", "coordinates": [ 15.2559103, 52.2274612 ] } },
+{ "type": "Feature", "properties": { "fid": 9, "name": "Dolnośląskie" }, "geometry": { "type": "Point", "coordinates": [ 16.8841961, 51.133986099999987 ] } },
+{ "type": "Feature", "properties": { "fid": 10, "name": "Łódzkie" }, "geometry": { "type": "Point", "coordinates": [ 19.4558778, 51.7592924 ] } },
+{ "type": "Feature", "properties": { "fid": 11, "name": "Opolskie" }, "geometry": { "type": "Point", "coordinates": [ 17.937989, 50.8003761 ] } },
+{ "type": "Feature", "properties": { "fid": 12, "name": "Śląskie" }, "geometry": { "type": "Point", "coordinates": [ 19.3219768, 50.5716595 ] } },
+{ "type": "Feature", "properties": { "fid": 13, "name": "Świętokrzyskie" }, "geometry": { "type": "Point", "coordinates": [ 20.626214588572768, 50.874063596354837 ] } },
+{ "type": "Feature", "properties": { "fid": 14, "name": "Lubelskie" }, "geometry": { "type": "Point", "coordinates": [ 22.5747275, 51.2509458 ] } },
+{ "type": "Feature", "properties": { "fid": 15, "name": "Małopolskie" }, "geometry": { "type": "Point", "coordinates": [ 19.940376034910265, 50.059935608419394 ] } },
+{ "type": "Feature", "properties": { "fid": 16, "name": "Podkarpackie" }, "geometry": { "type": "Point", "coordinates": [ 22.0895691, 50.0574749 ] } }
+]
+}

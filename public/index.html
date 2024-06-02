@@ -6,9 +6,7 @@
     <title>Lead Map</title>
     <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
     <link href="https://api.mapbox.com/mapbox-gl-js/v3.4.0/mapbox-gl.css" rel="stylesheet">
-    <script src="https://api.mapbox.com/mapbox-gl-js/v3.4.0/mapbox-gl.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/monday-sdk-js/dist/main.js"></script>
-
+    <link href="bootstrap/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body {
             margin: 0;
@@ -21,102 +19,10 @@
             bottom: 0;
             width: 100%;
         }
-
-        .rounded-rect {
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 0 50px -25px black;
-        }
-
-        .flex-center {
-            position: absolute;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .flex-center.left {
-            left: 0px;
-        }
-
-        .sidebar-content {
-            position: absolute;
-            width: 95%;
-            height: 95%;
-            font-family: Arial, Helvetica, sans-serif;
-            font-size: 32px;
-            color: gray;
-        }
-
-        .sidebar-toggle {
-            position: absolute;
-            width: 1.3em;
-            height: 1.3em;
-            overflow: visible;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .sidebar-toggle.left {
-            right: -1.5em;
-        }
-
-
-        .sidebar-toggle:hover {
-            color: #0aa1cf;
-            cursor: pointer;
-        }
-
-        .sidebar {
-            transition: transform 1s;
-            z-index: 1;
-            width: 300px;
-            height: 100%;
-        }
-
-        /*
-The sidebar styling has them "expanded" by default, we use CSS transforms to push them offscreen
-The toggleSidebar() function removes this class from the element in order to expand it.
-*/
-        .left.collapsed {
-            transform: translateX(-295px);
-        }
-
-        #colors-legend span {
-            border-radius: 3px;
-            display: inline-block;
-            height: 20px;
-            margin-right: 5px;
-            margin-bottom: 5px;
-            width: 100%;
-            display: block;
-        }
-
-        .legend {
-            font-size: 16px;
-            height: 85%;
-            position: fixed;
-            margin: 5px 5px 5px 5px;
-            overflow: auto;
-            padding: 10px;
-        }
-
-        #countries-legend div span.color {
-            border-radius: 50%;
-            display: inline-block;
-            height: 20px;
-            margin-right: 5px;
-            width: 20px;
-        }
-
-        #title {
-            font-size: 22px;
-            font-weight: bolder;
-            margin-bottom: 10px;
-            text-align: center;
-        }
     </style>
+    <link href="style.css" rel="stylesheet">
+
+
     <script type="module">
         // Import the functions you need from the SDKs you need
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
@@ -136,6 +42,9 @@ The toggleSidebar() function removes this class from the element in order to exp
         // Initialize Firebase
         const app = initializeApp(firebaseConfig);
     </script>
+    <script src="https://api.mapbox.com/mapbox-gl-js/v3.4.0/mapbox-gl.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/monday-sdk-js/dist/main.js"></script>
+
 </head>
 
 <body>
@@ -145,12 +54,16 @@ The toggleSidebar() function removes this class from the element in order to exp
             <div class="sidebar-content rounded-rect flex-center">
                 <div class="legend">
                     <b>Countries</b>
-                    <div id="countries">
-                        
+                    <div>
+                        <ul id="countries">
 
+                        </ul>
                     </div>
                     <b>Industries</b>
-                    <div id="industries">
+                    <div>
+                        <ul id="industries">
+
+                        </ul>
                     </div>
                     <b>Leads</b>
                     <div id="leads">
@@ -166,9 +79,55 @@ The toggleSidebar() function removes this class from the element in order to exp
         </div>
     </div>
 
+
+
+    <script src="js/jquery.min.js"></script>
+    <script src="bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="js/bootbox.js"></script>
+    
+
     <script>
         mapboxgl.accessToken = 'pk.eyJ1IjoieWFycmFyYW5nZXMiLCJhIjoiY2tydHpnM2pwOXdldzJubDM1b2dvcm15cCJ9.sAkVnbCzwrVLLRi7xxiHnA';
-        let mondayToken='';
+        let mondayToken = localStorage.getItem('monday-token');
+
+        const countries = [
+            {
+                name: 'Poland',
+                industries: [
+                    {
+                        name: 'Photovoltaic',
+                        boardId: '1284229859',
+                        goodGroupIds: ['nowa_grupa24985', 'new_group17485'],
+                        cityFieldId: 'long_text5'
+                    },
+                    {
+                        name: 'SKD',
+                        boardId: '1410697073',
+                        goodGroupIds: ['nowa_grupa36356'],
+                        cityFieldId: 'tekst7'
+                    }
+                ]
+            },
+            {
+                name: 'Spain',
+                industries: [
+
+                ]
+            },
+            {
+                name: 'Germany',
+                industries: [
+
+                ]
+            },
+            {
+                name: 'UK',
+                industries: [
+
+                ]
+            }
+        ];
+
         // Create a new map.
         const map = new mapboxgl.Map({
             container: 'map',
@@ -185,61 +144,62 @@ The toggleSidebar() function removes this class from the element in order to exp
 
             toggleSidebar('left');
 
-            // Add a source for the state polygons.
-            map.addSource('states', {
+            map.addSource('regions', {
                 'type': 'geojson',
-                'data': 'https://docs.mapbox.com/mapbox-gl-js/assets/ne_110m_admin_1_states_provinces_shp.geojson'
+                'data': 'data/poland.json'
             });
 
-            // Add a layer showing the state polygons.
             map.addLayer({
-                'id': 'states-layer',
+                'id': 'regions-layer',
                 'type': 'fill',
-                'source': 'states',
+                'source': 'regions',
                 'paint': {
-                    'fill-color': 'rgba(200, 100, 240, 0.4)',
+                    'fill-color': 'rgba(200, 100, 240, 0.2)',
                     'fill-outline-color': 'rgba(200, 100, 240, 1)'
                 }
             });
 
-            map.on('mouseenter', 'states-layer', () => {
+            map.addSource('labels', {
+                'type': 'geojson',
+                'data': 'data/poland-labels.json'
+            });
+
+            map.addLayer({
+                'id': 'labels-icon-layer',
+                'type': 'circle',
+                'source': 'labels',
+                'paint': {
+                    'circle-radius': 6,
+                    'circle-color': '#B42222'
+                }
+            });
+
+            map.addLayer({
+                'id': 'labels-layer',
+                'type': 'symbol',
+                'source': 'labels',
+                'layout': {
+                    'text-field': ['get', 'name'],
+                    'text-size': 14,
+                    'text-anchor': 'center',
+                    'text-offset': [0,1]
+                }
+            });
+
+            map.on('mouseenter', 'regions-layer', () => {
                 map.getCanvas().style.cursor = 'pointer';
             });
 
-            map.on('mouseleave', 'states-layer', () => {
+            map.on('mouseleave', 'regions-layer', () => {
                 map.getCanvas().style.cursor = '';
             });
+
+            if (mondayToken == null) {
+                showModalToSetToken();
+            }
         });
 
         const monday = window.mondaySdk();
-
-        let query = `query GetBoardItems{  
-        boards(ids: 1410697073) {  
-            name
-            groups(ids: ["nowa_grupa36356"]){
-                title
-                items_page {  
-                    items {  
-                        id  
-                        name 
-                        column_values(ids: ["email", "tekst7"]) {  
-                            id  
-                            value  
-                        }  
-                    }  
-                }  
-            }
-        }  
-        }`;
-
-        monday.api(query, {
-            apiVersion: '2023-10',
-            token: mondayToken
-        }).then(res => {
-            console.log('result');
-            console.log(res);
-        });
-
 
 
 
@@ -247,14 +207,79 @@ The toggleSidebar() function removes this class from the element in order to exp
             const elem = document.getElementById(id);
             const collapsed = elem.classList.toggle('collapsed');
             const padding = {};
-            padding[id] = collapsed ? 0 : 300; 
+            padding[id] = collapsed ? 0 : 300;
             const sidebarArrow = document.getElementById('sidebar-arrow');
             sidebarArrow.innerHTML = collapsed ? '&rarr;' : '&larr;';
             map.easeTo({
                 padding: padding,
-                duration: 1000 
+                duration: 1000
             });
         }
+
+        function showModalToSetToken() {
+            console.log('Enter Token');
+            bootbox.prompt('Please enter your token',
+                function (result) {
+                    localStorage.setItem('monday-token', result);
+                });
+        }
+
+        function listCountries() {
+            $('#countries').empty();
+            let countryNames = countries.map(c => {
+                let countryItem = $(`<li>${c.name}</li>`);
+                $('#countries').append(countryItem);
+                countryItem.click(() => {
+                    listIndustriesByCountry(c.name);
+                });
+            });
+
+        }
+
+        function listIndustriesByCountry(countryName) {
+            $('#industries').empty();
+            const insdustries = countries.find(c => c.name == countryName).industries.map(i => {
+                let industryItem = $(`<li>${i.name}</li>`);
+                $('#industries').append(industryItem);
+                industryItem.click(() => {
+                    listLeadsByIndustry(i);
+                });
+            });
+        }
+
+        function listLeadsByIndustry(industry) {
+            let query = `query GetBoardItems{  
+                    boards(ids: [${industry.boardId}]) {  
+                        name
+                        groups(ids: ["${industry.goodGroupIds.join('","')}"]){
+                            title
+                            items_page {  
+                                items {  
+                                    id  
+                                    name 
+                                    column_values(ids: ["email", "tekst7", "long_text5"]) {  
+                                        id  
+                                        value  
+                                    }  
+                                }  
+                            }  
+                        }
+                    }  
+                }`;
+
+            console.log(query);
+
+            monday.api(query, {
+                apiVersion: '2023-10',
+                token: mondayToken
+            }).then(res => {
+                console.log('result');
+                console.log(res);
+            });
+
+        }
+
+        listCountries();
     </script>
 
 </body>
