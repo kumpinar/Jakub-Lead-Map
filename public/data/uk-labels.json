@@ -1,0 +1,19 @@
+{
+"type": "FeatureCollection",
+"name": "uk-labels",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+"features": [
+{ "type": "Feature", "properties": { "name": "North East (England)" }, "geometry": { "type": "Point", "coordinates": [ -1.904135897786328, 55.019460515712687 ] } },
+{ "type": "Feature", "properties": { "name": "North West (England)" }, "geometry": { "type": "Point", "coordinates": [ -2.723565771207781, 54.057394276582656 ] } },
+{ "type": "Feature", "properties": { "name": "Yorkshire and The Humber" }, "geometry": { "type": "Point", "coordinates": [ -1.229366756995756, 53.965512490191713 ] } },
+{ "type": "Feature", "properties": { "name": "Wales" }, "geometry": { "type": "Point", "coordinates": [ -3.763619347664968, 52.335498467505559 ] } },
+{ "type": "Feature", "properties": { "name": "Scotland" }, "geometry": { "type": "Point", "coordinates": [ -4.18088585124676, 56.833164354270821 ] } },
+{ "type": "Feature", "properties": { "name": "East Midlands (England)" }, "geometry": { "type": "Point", "coordinates": [ -0.805120873064903, 52.927149226263396 ] } },
+{ "type": "Feature", "properties": { "name": "West Midlands (England)" }, "geometry": { "type": "Point", "coordinates": [ -2.270722058123233, 52.480351197238043 ] } },
+{ "type": "Feature", "properties": { "name": "East of England" }, "geometry": { "type": "Point", "coordinates": [ 0.541159521507663, 52.251084830581092 ] } },
+{ "type": "Feature", "properties": { "name": "London" }, "geometry": { "type": "Point", "coordinates": [ -0.110529599930736, 51.500883994305752 ] } },
+{ "type": "Feature", "properties": { "name": "South East (England)" }, "geometry": { "type": "Point", "coordinates": [ -0.53346326499609, 51.281027606229181 ] } },
+{ "type": "Feature", "properties": { "name": "South West (England)" }, "geometry": { "type": "Point", "coordinates": [ -3.130758946310707, 51.002360211922834 ] } },
+{ "type": "Feature", "properties": { "name": "Northern Ireland" }, "geometry": { "type": "Point", "coordinates": [ -6.681738312830364, 54.608059345727177 ] } }
+]
+}

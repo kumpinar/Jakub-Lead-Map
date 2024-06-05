@@ -1,0 +1,23 @@
+{
+"type": "FeatureCollection",
+"name": "germany-labels",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+"features": [
+{ "type": "Feature", "properties": { "name": "Schleswig-Holstein" }, "geometry": { "type": "Point", "coordinates": [ 9.817077503450838, 54.184055180021453 ] } },
+{ "type": "Feature", "properties": { "name": "Hamburg" }, "geometry": { "type": "Point", "coordinates": [ 10.016881841749283, 53.547126132605605 ] } },
+{ "type": "Feature", "properties": { "name": "Niedersachsen" }, "geometry": { "type": "Point", "coordinates": [ 9.159928346768162, 52.765629323847875 ] } },
+{ "type": "Feature", "properties": { "name": "Bremen" }, "geometry": { "type": "Point", "coordinates": [ 8.743402315182928, 53.199662127158327 ] } },
+{ "type": "Feature", "properties": { "name": "Nordrhein-Westfalen" }, "geometry": { "type": "Point", "coordinates": [ 7.562136200711106, 51.479857321848037 ] } },
+{ "type": "Feature", "properties": { "name": "Hessen" }, "geometry": { "type": "Point", "coordinates": [ 9.031178135757369, 50.603256431461382 ] } },
+{ "type": "Feature", "properties": { "name": "Rheinland-Pfalz" }, "geometry": { "type": "Point", "coordinates": [ 7.449153326314054, 49.913754125538993 ] } },
+{ "type": "Feature", "properties": { "name": "Baden-Württemberg" }, "geometry": { "type": "Point", "coordinates": [ 9.046421549852012, 48.545413857800739 ] } },
+{ "type": "Feature", "properties": { "name": "Bayern" }, "geometry": { "type": "Point", "coordinates": [ 11.419899945307469, 48.947515293682578 ] } },
+{ "type": "Feature", "properties": { "name": "Brandenburg" }, "geometry": { "type": "Point", "coordinates": [ 13.397856473112865, 52.472846014262977 ] } },
+{ "type": "Feature", "properties": { "name": "Mecklenburg-Vorpommern" }, "geometry": { "type": "Point", "coordinates": [ 12.53482975173478, 53.753271910715938 ] } },
+{ "type": "Feature", "properties": { "name": "Sachsen" }, "geometry": { "type": "Point", "coordinates": [ 13.348580582144892, 51.052313046935964 ] } },
+{ "type": "Feature", "properties": { "name": "Sachsen-Anhalt" }, "geometry": { "type": "Point", "coordinates": [ 11.700712249096016, 52.013231629738307 ] } },
+{ "type": "Feature", "properties": { "name": "Thüringen" }, "geometry": { "type": "Point", "coordinates": [ 11.025009015599881, 50.903842155928189 ] } },
+{ "type": "Feature", "properties": { "name": "Saarland" }, "geometry": { "type": "Point", "coordinates": [ 6.953315048054438, 49.384371520149543 ] } },
+{ "type": "Feature", "properties": { "name": "Berlin" }, "geometry": { "type": "Point", "coordinates": [ 13.402184569134915, 52.501384719394167 ] } }
+]
+}

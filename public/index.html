@@ -44,6 +44,7 @@
     </script>
     <script src="https://api.mapbox.com/mapbox-gl-js/v3.4.0/mapbox-gl.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/monday-sdk-js/dist/main.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
 
 </head>
 
@@ -65,8 +66,11 @@
 
                         </ul>
                     </div>
-                    <b>Leads</b>
-                    <div id="leads">
+                    <b>Good Leads</b>
+                    <div>
+                        <ul id="leads">
+
+                        </ul>
                     </div>
                     <b>Clients</b>
                     <div id="clients">
@@ -93,11 +97,14 @@
         const countries = [
             {
                 name: 'Poland',
+                code: 'pl',
+                regionBordersUrl : 'data/poland.json',
+                regionLabelsUrl : 'data/poland-labels.json',
                 industries: [
                     {
                         name: 'Photovoltaic',
                         boardId: '1284229859',
-                        goodGroupIds: ['nowa_grupa24985', 'new_group17485'],
+                        goodGroupIds: ['nowa_grupa24985', 'new_group17485', 'nowa_grupa10322'], // nowa_grupa10322: this is Send group used for testing
                         cityFieldId: 'long_text5'
                     },
                     {
@@ -110,18 +117,27 @@
             },
             {
                 name: 'Spain',
+                code: 'es',
+                regionBordersUrl : 'data/spain.json',
+                regionLabelsUrl : 'data/spain-labels.json',
                 industries: [
 
                 ]
             },
             {
                 name: 'Germany',
+                code: 'de',
+                regionBordersUrl : 'data/germany.json',
+                regionLabelsUrl : 'data/germany-labels.json',
                 industries: [
 
                 ]
             },
             {
                 name: 'UK',
+                code: 'uk',
+                regionBordersUrl : 'data/uk.json',
+                regionLabelsUrl : 'data/uk-labels.json',
                 industries: [
 
                 ]
@@ -137,7 +153,7 @@
                 21.00489285129794,
                 52.212130350909234
             ],
-            zoom: 5
+            zoom: 4
         });
 
         map.on('load', () => {
@@ -146,7 +162,7 @@
 
             map.addSource('regions', {
                 'type': 'geojson',
-                'data': 'data/poland.json'
+                'data': null
             });
 
             map.addLayer({
@@ -161,7 +177,7 @@
 
             map.addSource('labels', {
                 'type': 'geojson',
-                'data': 'data/poland-labels.json'
+                'data': null
             });
 
             map.addLayer({
@@ -220,7 +236,8 @@
             console.log('Enter Token');
             bootbox.prompt('Please enter your token',
                 function (result) {
-                    localStorage.setItem('monday-token', result);
+                    mondayToken = result;
+                    localStorage.setItem('monday-token', mondayToken);
                 });
         }
 
@@ -230,6 +247,19 @@
                 let countryItem = $(`<li>${c.name}</li>`);
                 $('#countries').append(countryItem);
                 countryItem.click(() => {
+
+                    map.getSource('regions').setData(c.regionBordersUrl);
+                    map.getSource('labels').setData(c.regionLabelsUrl);
+
+                    fetch(c.regionBordersUrl)
+                        .then((response) => response.json()) 
+                        .then(function (geojson) {
+                        const bbox = turf.bbox(geojson);
+                        map.fitBounds(bbox, {
+                                padding: {top: 50, bottom:50, left: 100, right: 50}
+                            });
+                        });
+
                     listIndustriesByCountry(c.name);
                 });
             });
@@ -238,6 +268,7 @@
 
         function listIndustriesByCountry(countryName) {
             $('#industries').empty();
+            $('#leads').empty();
             const insdustries = countries.find(c => c.name == countryName).industries.map(i => {
                 let industryItem = $(`<li>${i.name}</li>`);
                 $('#industries').append(industryItem);
@@ -253,11 +284,11 @@
                         name
                         groups(ids: ["${industry.goodGroupIds.join('","')}"]){
                             title
-                            items_page {  
+                            items_page(limit: 500) {  
                                 items {  
                                     id  
                                     name 
-                                    column_values(ids: ["email", "tekst7", "long_text5"]) {  
+                                    column_values(ids: ["email", "lead_email" "tekst7", "long_text5"]) {  
                                         id  
                                         value  
                                     }  
@@ -267,16 +298,55 @@
                     }  
                 }`;
 
-            console.log(query);
-
             monday.api(query, {
                 apiVersion: '2023-10',
                 token: mondayToken
             }).then(res => {
-                console.log('result');
                 console.log(res);
+                let leads =  [];
+                res.data.boards[0].groups.map(g => {
+
+                    g.items_page.items.map(li => {
+                        let leadEmail= JSON.parse(li.column_values.filter(cv => cv.id=='email' || cv.id=='lead_email' )[0].value)?.email;
+                        let leadCity= '';
+                        const cityColumn = li.column_values.filter(cv => cv.id!='email' && cv.id!='lead_email')[0].value;
+                        if (cityColumn.startsWith('{')){
+                            leadCity = JSON.parse(cityColumn).text;
+                        }
+                        else{
+                            leadCity = cityColumn
+                        }
+
+                        leads.push({
+                            id : li.id,
+                            name : li.name,
+                            email : leadEmail,
+                            city : leadCity.replaceAll('\"', '')
+                        });
+                    });
+
+                });
+                displayLeads(leads)
+                
             });
 
+        }
+
+        function displayLeads(leads) {
+            console.log(leads);
+
+            let cities = leads.map(le => le.city);
+            console.log(cities);
+
+            $('#leads').empty();
+            leads.map(le => {
+                let leadItem = $(`<li>${le.name} <span class="city">${le.city}</span></li>`);
+                $('#leads').append(leadItem);
+
+                leadItem.click(() => {
+                    console.log(le.id);
+                });
+            });
         }
 
         listCountries();

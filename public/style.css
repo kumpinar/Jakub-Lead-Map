@@ -78,6 +78,7 @@ The toggleSidebar() function removes this class from the element in order to exp
     margin: 5px 5px 5px 5px;
     overflow: auto;
     padding: 10px;
+    width: 275px;
 }
 
 #countries-legend div span.color {

@@ -12,5 +12,8 @@
         "destination": "/index.html"
       }
     ]
+  },
+  "extensions": {
+    "firestore-geocode-address": "googlemapsplatform/firestore-geocode-address@0.1.3"
   }
 }
