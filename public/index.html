@@ -53,10 +53,8 @@
                         </ul>
                     </div>
                     <b>Good Leads</b>
-                    <div>
-                        <ul id="leads">
+                    <div id="leads">
 
-                        </ul>
                     </div>
                     <b>Clients</b>
                     <div id="clients">
@@ -312,11 +310,14 @@
         }
 
         function showModalToSetToken() {
-            bootbox.prompt('Please enter your token',
-                function (result) {
+            bootbox.prompt({
+                title: 'Please enter your token!',
+                message: '<p>Monday CRM -> Profile Logo -> Developers -> My access tokens -> Show/Copy </p>',
+                callback: function (result) {
                     mondayToken = result;
                     localStorage.setItem('monday-token', mondayToken);
-                });
+                }
+            });
         }
 
         function listCountries() {
@@ -358,6 +359,13 @@
         }
 
         function listLeadsByIndustry(industry, country) {
+
+            $('#leads').html(`
+                                <div class="spinner-border" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                            `);
+
             let query = `query GetBoardItems{  
                     boards(ids: [${industry.boardId}]) {  
                         name
@@ -423,7 +431,7 @@
 
             $('#leads').empty();
             leads.map(le => {
-                let leadItem = $(`<li>${le.name} <span class="city">${le.city}</span></li>`);
+                let leadItem = $(`<h6>${le.name} <span class="badge rounded-pill text-bg-secondary">${le.city}</span>`);
                 $('#leads').append(leadItem);
 
                 leadItem.click(() => {
