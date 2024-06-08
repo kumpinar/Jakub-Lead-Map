@@ -1,5 +1,14 @@
 {
   "projects": {
     "default": "lemon-lead-map"
-  }
+  },
+  "targets": {},
+  "etags": {
+    "lemon-lead-map": {
+      "extensionInstances": {
+        "firestore-geocode-address": "b03f99e62a1b7686c962fb62eb336c1ed857b161c7b46c03e239983387e932f7"
+      }
+    }
+  },
+  "dataconnectEmulatorConfig": {}
 }

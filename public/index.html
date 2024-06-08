@@ -23,28 +23,14 @@
     <link href="style.css" rel="stylesheet">
 
 
-    <script type="module">
-        // Import the functions you need from the SDKs you need
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-        // TODO: Add SDKs for Firebase products that you want to use
-        // https://firebase.google.com/docs/web/setup#available-libraries
-
-        // Your web app's Firebase configuration
-        const firebaseConfig = {
-            apiKey: "AIzaSyDsnXEGVGThb-OnBXG20PjFvRMdgFw-vDc",
-            authDomain: "lemon-lead-map.firebaseapp.com",
-            projectId: "lemon-lead-map",
-            storageBucket: "lemon-lead-map.appspot.com",
-            messagingSenderId: "1095389983309",
-            appId: "1:1095389983309:web:5eb6344c31006cdb8e6204"
-        };
-
-        // Initialize Firebase
-        const app = initializeApp(firebaseConfig);
-    </script>
     <script src="https://api.mapbox.com/mapbox-gl-js/v3.4.0/mapbox-gl.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/monday-sdk-js/dist/main.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
+
+
+    <script src="https://www.gstatic.com/firebasejs/8.7.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.7.1/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.7.1/firebase-analytics.js"></script>
 
 </head>
 
@@ -88,23 +74,26 @@
     <script src="js/jquery.min.js"></script>
     <script src="bootstrap/js/bootstrap.bundle.min.js"></script>
     <script src="js/bootbox.js"></script>
-    
+
 
     <script>
         mapboxgl.accessToken = 'pk.eyJ1IjoieWFycmFyYW5nZXMiLCJhIjoiY2tydHpnM2pwOXdldzJubDM1b2dvcm15cCJ9.sAkVnbCzwrVLLRi7xxiHnA';
         let mondayToken = localStorage.getItem('monday-token');
+        let selectedCountry;
+        let selectedIndustry;
+        let selectedLeads;
 
         const countries = [
             {
                 name: 'Poland',
                 code: 'pl',
-                regionBordersUrl : 'data/poland.json',
-                regionLabelsUrl : 'data/poland-labels.json',
+                regionBordersUrl: 'data/poland.json',
+                regionLabelsUrl: 'data/poland-labels.json',
                 industries: [
                     {
                         name: 'Photovoltaic',
                         boardId: '1284229859',
-                        goodGroupIds: ['nowa_grupa24985', 'new_group17485', 'nowa_grupa10322'], // nowa_grupa10322: this is Send group used for testing
+                        goodGroupIds: ['nowa_grupa24985', 'new_group17485'], // nowa_grupa10322: this is Send group used for testing
                         cityFieldId: 'long_text5'
                     },
                     {
@@ -118,8 +107,8 @@
             {
                 name: 'Spain',
                 code: 'es',
-                regionBordersUrl : 'data/spain.json',
-                regionLabelsUrl : 'data/spain-labels.json',
+                regionBordersUrl: 'data/spain.json',
+                regionLabelsUrl: 'data/spain-labels.json',
                 industries: [
 
                 ]
@@ -127,8 +116,8 @@
             {
                 name: 'Germany',
                 code: 'de',
-                regionBordersUrl : 'data/germany.json',
-                regionLabelsUrl : 'data/germany-labels.json',
+                regionBordersUrl: 'data/germany.json',
+                regionLabelsUrl: 'data/germany-labels.json',
                 industries: [
 
                 ]
@@ -136,8 +125,8 @@
             {
                 name: 'UK',
                 code: 'uk',
-                regionBordersUrl : 'data/uk.json',
-                regionLabelsUrl : 'data/uk-labels.json',
+                regionBordersUrl: 'data/uk.json',
+                regionLabelsUrl: 'data/uk-labels.json',
                 industries: [
 
                 ]
@@ -182,8 +171,8 @@
 
             map.addLayer({
                 'id': 'labels-icon-layer',
-                'type': 'circle',
                 'source': 'labels',
+                'type': 'circle',
                 'paint': {
                     'circle-radius': 6,
                     'circle-color': '#B42222'
@@ -198,9 +187,99 @@
                     'text-field': ['get', 'name'],
                     'text-size': 14,
                     'text-anchor': 'center',
-                    'text-offset': [0,1]
+                    'text-offset': [0, 1]
                 }
             });
+
+            map.addSource('leads', {
+                'type': 'geojson',
+                'data': null,
+                cluster: true,
+                clusterMaxZoom: 14, // Max zoom to cluster points on
+                clusterRadius: 50 // Radius of each cluster when clustering points (defaults to 50)
+            });
+
+            map.addLayer({
+                id: 'lead-clusters',
+                type: 'circle',
+                source: 'leads',
+                filter: ['has', 'point_count'],
+                paint: {
+                    'circle-color': [
+                        'step',
+                        ['get', 'point_count'],
+                        '#51bbd6',
+                        100,
+                        '#f1f075',
+                        750,
+                        '#f28cb1'
+                    ],
+                    'circle-radius': [
+                        'step',
+                        ['get', 'point_count'],
+                        20,
+                        100,
+                        30,
+                        750,
+                        40
+                    ]
+                }
+            });
+
+            map.addLayer({
+                id: 'lead-cluster-count',
+                type: 'symbol',
+                source: 'leads',
+                filter: ['has', 'point_count'],
+                layout: {
+                    'text-field': ['get', 'point_count_abbreviated'],
+                    'text-font': ['DIN Offc Pro Medium', 'Arial Unicode MS Bold'],
+                    'text-size': 12
+                }
+            });
+
+            // inspect a cluster on click
+            map.on('click', 'lead-clusters', (e) => {
+                const features = map.queryRenderedFeatures(e.point, {
+                    layers: ['lead-clusters']
+                });
+                const clusterId = features[0].properties.cluster_id;
+                map.getSource('leads').getClusterExpansionZoom(
+                    clusterId,
+                    (err, zoom) => {
+                        if (err) return;
+
+                        map.easeTo({
+                            center: features[0].geometry.coordinates,
+                            zoom: zoom
+                        });
+                    }
+                );
+            });
+
+
+
+
+            map.loadImage('markers/cb0d0c.png', (error, image) => {
+                if (error) throw error;
+                map.addImage('lead-marker', image);
+
+                map.addLayer({
+                    'id': 'leads-layer',
+                    'source': 'leads',
+                    "type": "symbol",
+                    "filter": ['!', ['has', 'point_count']],
+                    "layout": {
+                        "icon-image": "lead-marker",
+                        "icon-allow-overlap": true,
+                        'text-field': ['get', 'name'],
+                        'text-offset': [0, 1.25],
+                        'text-anchor': 'top'
+                    }
+                });
+
+            });
+
 
             map.on('mouseenter', 'regions-layer', () => {
                 map.getCanvas().style.cursor = 'pointer';
@@ -233,7 +312,6 @@
         }
 
         function showModalToSetToken() {
-            console.log('Enter Token');
             bootbox.prompt('Please enter your token',
                 function (result) {
                     mondayToken = result;
@@ -250,13 +328,14 @@
 
                     map.getSource('regions').setData(c.regionBordersUrl);
                     map.getSource('labels').setData(c.regionLabelsUrl);
+                    map.getSource('leads').setData({ "type": "FeatureCollection", "features": [] });
 
                     fetch(c.regionBordersUrl)
-                        .then((response) => response.json()) 
+                        .then((response) => response.json())
                         .then(function (geojson) {
-                        const bbox = turf.bbox(geojson);
-                        map.fitBounds(bbox, {
-                                padding: {top: 50, bottom:50, left: 100, right: 50}
+                            const bbox = turf.bbox(geojson);
+                            map.fitBounds(bbox, {
+                                padding: { top: 50, bottom: 50, left: 100, right: 50 }
                             });
                         });
 
@@ -273,12 +352,12 @@
                 let industryItem = $(`<li>${i.name}</li>`);
                 $('#industries').append(industryItem);
                 industryItem.click(() => {
-                    listLeadsByIndustry(i);
+                    listLeadsByIndustry(i, countryName);
                 });
             });
         }
 
-        function listLeadsByIndustry(industry) {
+        function listLeadsByIndustry(industry, country) {
             let query = `query GetBoardItems{  
                     boards(ids: [${industry.boardId}]) {  
                         name
@@ -302,41 +381,45 @@
                 apiVersion: '2023-10',
                 token: mondayToken
             }).then(res => {
-                console.log(res);
-                let leads =  [];
+                selectedLeads = [];
+                let leadAddresses = [];
                 res.data.boards[0].groups.map(g => {
 
                     g.items_page.items.map(li => {
-                        let leadEmail= JSON.parse(li.column_values.filter(cv => cv.id=='email' || cv.id=='lead_email' )[0].value)?.email;
-                        let leadCity= '';
-                        const cityColumn = li.column_values.filter(cv => cv.id!='email' && cv.id!='lead_email')[0].value;
-                        if (cityColumn.startsWith('{')){
+                        let leadEmail = JSON.parse(li.column_values.filter(cv => cv.id == 'email' || cv.id == 'lead_email')[0].value)?.email;
+                        let leadCity = '';
+                        const cityColumn = li.column_values.filter(cv => cv.id != 'email' && cv.id != 'lead_email')[0].value;
+                        if (cityColumn.startsWith('{')) {
                             leadCity = JSON.parse(cityColumn).text;
                         }
-                        else{
+                        else {
                             leadCity = cityColumn
                         }
 
-                        leads.push({
-                            id : li.id,
-                            name : li.name,
-                            email : leadEmail,
-                            city : leadCity.replaceAll('\"', '')
+                        leadCity = leadCity.replaceAll('\"', '');
+
+
+                        selectedLeads.push({
+                            id: li.id,
+                            name: li.name,
+                            email: leadEmail,
+                            city: leadCity,
+                            address: leadCity + ' ' + country
                         });
                     });
 
                 });
-                displayLeads(leads)
-                
+
+                displayLeads(selectedLeads);
+                createAddressIfNotExist(selectedLeads.map(l => l.address));
+
             });
 
         }
 
         function displayLeads(leads) {
-            console.log(leads);
 
             let cities = leads.map(le => le.city);
-            console.log(cities);
 
             $('#leads').empty();
             leads.map(le => {
@@ -350,7 +433,143 @@
         }
 
         listCountries();
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDsnXEGVGThb-OnBXG20PjFvRMdgFw-vDc",
+            authDomain: "lemon-lead-map.firebaseapp.com",
+            projectId: "lemon-lead-map",
+            storageBucket: "lemon-lead-map.appspot.com",
+            messagingSenderId: "1095389983309",
+            appId: "1:1095389983309:web:5eb6344c31006cdb8e6204"
+        };
+        firebase.initializeApp(firebaseConfig);
+        firebase.analytics();
+        const db = firebase.firestore();
+
+        /* db.collection('address_book').get().then((snapshot) => {
+            snapshot.docs.forEach(doc => {
+                console.log(doc.data());
+            });
+        });
+
+        db.collection('address_book').where('address', '==', 'Kraków 31-950').get().then((snapshot) => {
+            console.log('found', snapshot.docs.length);
+            snapshot.docs.forEach(doc => {
+                console.log(doc.data());
+            });
+        });
+
+        db.collection('address_book').where('address', '==', 'Poland Kraków 31-950').get().then((snapshot) => {
+            console.log('not found', snapshot.docs.length);
+            snapshot.docs.forEach(doc => {
+                console.log(doc.data());
+            });
+        }); */
+
+        /*  db.collection("cafes").add({
+             name: form.name.value,
+             city: form.city.value,
+         }); */
+
+        function createAddressIfNotExist(addresses) {
+            let addressCreatePromises = [];
+            let addressCheckPromises = [];
+
+            addresses.forEach(address => {
+                addressCheckPromises.push(
+                    db.collection('address_book').where('address', '==', address).get().then((snapshot) => {
+                        if (snapshot.docs.length == 0) {
+                            return address
+                        }
+                    })
+                );
+            });
+
+            Promise.all(addressCheckPromises).then((values) => {
+                values.forEach(address => {
+                    if (address) {
+                        addressCreatePromises.push(
+                            db.collection("address_book").add({
+                                address: address
+                            }).then(() => {
+                                return address;
+                            })
+                        );
+                    }
+                });
+                Promise.all(addressCreatePromises).then((values) => {
+                    //display them on map
+                    displayLeadsOnMap();
+                });
+            });
+
+
+
+        }
+
+        function displayLeadsOnMap() {
+
+            let geojson = {
+                "name": "NewFeatureType",
+                "type": "FeatureCollection",
+                "features": []
+            };
+
+            let uniqueAdresses = selectedLeads.map(l => l.address);
+            uniqueAdresses = uniqueAdresses.filter(onlyUnique);
+
+            const batches = [];
+
+            while (uniqueAdresses.length) {
+                // firestore limits batches to 10
+                const batch = uniqueAdresses.splice(0, 10);
+
+                // add the batch request to to a queue
+                batches.push(
+                    db.collection('address_book')
+                        .where(
+                            'address',
+                            'in',
+                            [...batch]
+                        )
+                        .get()
+                        .then(results => results.docs.map(result => ({ /* id: result.id, */ ...result.data() })))
+                )
+            }
+
+            // after all of the data is fetched, return it
+            return Promise.all(batches)
+                .then(content => {
+                    content.flat().forEach(addressData => {
+                        selectedLeads.filter(le => le.address == addressData.address).forEach(le => {
+                            le['latitude'] = addressData.latitude;
+                            le['longitude'] = addressData.longitude;
+                        });
+                    });
+
+                    selectedLeads.map(le => {
+                        geojson.features.push(
+                            {
+                                type: "Feature",
+                                geometry: {
+                                    type: "Point",
+                                    coordinates: [le.longitude, le.latitude]
+                                },
+                                properties: { ...le }
+                            }
+                        );
+                    });
+                    map.getSource('leads').setData(geojson);
+                });
+        }
+
+        function onlyUnique(value, index, array) {
+            return array.indexOf(value) === index;
+        }
+
+
     </script>
+
 
 </body>
 
