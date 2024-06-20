@@ -10,9 +10,7 @@ const countries = [
                 boardId: '1284229859',
                 goodGroupIds: ['nowa_grupa24985'], // nowa_grupa10322: this is Send group used for testing.  'new_group17485': Good B2B
                 cityFieldId: 'long_text5',
-                statusColumnId: 'lead_status',
-                sentIndex: 3,
-                sendGroupId: 'nowa_grupa10322'
+                clientsCsvUrl:  'https://docs.google.com/spreadsheets/d/e/2PACX-1vSXX8s55OGAtinS512CxTofxeajnRk6l8yWtMslGSoY9rrgPUMAdxktZvcD_MfHPpKTghv_niiDPcHh/pub?gid=0&single=true&output=csv'
             },
             {
                 name: 'Heat Pumps',
@@ -135,7 +133,7 @@ const countries = [
     }
 ];
 
-const clients = [
+/* const clients = [
     {
         name:'Test Client',
         regions:[
@@ -152,4 +150,4 @@ const clients = [
             'pomorskie'
         ]
     }
-]
+] */

@@ -59,9 +59,6 @@
                     <div id="leads">
 
                     </div>
-                    <b>Clients</b>
-                    <div id="clients">
-                    </div>
                 </div>
                 <div id="sidebar-arrow" class="sidebar-toggle rounded-rect left" onclick="toggleSidebar('left')">
                     &rarr;
@@ -79,22 +76,22 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
+                    <table class="table table-striped">
+                        <tbody>
+                            <tr>
+                                <th scope="row">Selected Lead</th>
+                                <td id="tdSelectedLead"></td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Region of the Lead</th>
+                                <td id="tdRegionOfSelectedLead"></td>
+                            </tr>
+                            </tbody>
+                    </table>
                     <div id="noClient">
                         There is no matched client.
                     </div>
                     <div id="clients-table-container">
-                        <table class="table table-striped">
-                            <tbody>
-                                <tr>
-                                  <th scope="row">Selected Lead</th>
-                                  <td id="tdSelectedLead"></td>
-                                </tr>
-                                <tr>
-                                  <th scope="row">Region of the Lead</th>
-                                  <td id="tdRegionOfSelectedLead"></td>
-                                </tr>
-                              </tbody>
-                        </table>
                         <table id="clients-table">
                             <thead>
                                 <tr>
@@ -117,6 +114,7 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap-table@1.22.6/dist/bootstrap-table.min.js"></script>
     <script src="js/bootbox.js"></script>
     <script src="js/constants.js"></script>
+    <script src="js/papaparse.min.js"></script>
     <script src="js/app.js"></script>
 
 

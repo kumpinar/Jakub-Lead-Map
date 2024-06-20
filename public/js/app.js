@@ -12,6 +12,7 @@ let groupsOfSelectedBoard;
 let columnsOfSelectedBoard;
 const CLIENT_STATUS_SENT = 1;
 const LEAD_STATUS_SENT = 3;
+let clients;
 
 const clientsModal = new bootstrap.Modal('#clientsModal');
 
@@ -254,28 +255,29 @@ function listCountries() {
                         padding: { top: 50, bottom: 50, left: 100, right: 50 }
                     });
                 });
-
-            listIndustriesByCountry(c.name);
+            selectedCountry = c.name;
+            listIndustriesByCountry();
         });
     });
 
 }
 
-function listIndustriesByCountry(countryName) {
+function listIndustriesByCountry() {
     $('#industries').empty();
     $('#leads').empty();
-    countries.find(c => c.name == countryName).industries.map(i => {
+    countries.find(c => c.name == selectedCountry).industries.map(i => {
         let industryItem = $(`<li>${i.name}</li>`);
         $('#industries').append(industryItem);
         industryItem.click(() => {
-            listLeadsByIndustry(i, countryName);
+            selectedIndustry = i;
+            listLeadsByIndustry();
+            getClientsByIndustry();
             // listClientsByIndustry(i, countryName); // no need to show clients on map, for now
         });
     });
 }
 
-function listLeadsByIndustry(industry, country) {
-    selectedIndustry = industry;
+function listLeadsByIndustry() {
     $('#leads').html(`
                         <div class="spinner-border" role="status">
                             <span class="visually-hidden">Loading...</span>
@@ -283,9 +285,9 @@ function listLeadsByIndustry(industry, country) {
                     `);
 
     let query = `query GetBoardItems{  
-            boards(ids: [${industry.boardId}]) {  
+            boards(ids: [${selectedIndustry.boardId}]) {  
                 name
-                groups(ids: ["${industry.goodGroupIds.join('","')}"]){
+                groups(ids: ["${selectedIndustry.goodGroupIds.join('","')}"]){
                     title
                     items_page(limit: 500) {  
                         items {  
@@ -328,7 +330,7 @@ function listLeadsByIndustry(industry, country) {
                     name: li.name,
                     email: leadEmail,
                     city: leadCity,
-                    address: leadCity + ' ' + country
+                    address: leadCity + ' ' + selectedCountry
                 });
             });
 
@@ -345,8 +347,6 @@ function listLeadsByIndustry(industry, country) {
 
 function displayLeads(leads) {
 
-    let cities = leads.map(le => le.city);
-
     $('#leads').empty();
     leads.map(le => {
         let leadItem = $(`<h6>${le.name} <span class="badge rounded-pill text-bg-secondary">${le.city}</span>`);
@@ -356,6 +356,24 @@ function displayLeads(leads) {
             console.log(le.id);
         });
     });
+}
+
+function getClientsByIndustry() {
+    clients = null;
+    if (selectedIndustry.clientsCsvUrl) {
+       Papa.parse(selectedIndustry.clientsCsvUrl + '&nocache=' + Math.floor(Math.random()*100000000).toString(), {
+            download: true,
+            header: true,
+            complete: function(results) {
+                clients = results.data.map(d => {
+                    return {
+                        name : d['NAME'],
+                        regions : d['LOCATION'].toLowerCase().split(',')
+                    }
+                });
+            }
+        });
+    };
 }
 
 listCountries();
@@ -470,163 +488,6 @@ function onlyUnique(value, index, array) {
 }
 
 
-
-
-function listClientsByIndustry(industry, country) {
-
-    $('#clients').html(`
-            <div class="spinner-border" role="status">
-                <span class="visually-hidden">Loading...</span>
-            </div>
-        `);
-
-
-    db.collection('address_book')
-        .where('type', '==', 'client')
-        .where('industry', '==', industry.name)
-        .get().then((snapshot) => {
-            let clients = snapshot.docs.map(doc => doc.data());
-
-            displayClients(clients);
-            displayClientsOnMap(clients);
-        });
-
-}
-
-function displayClients(clients) {
-
-    $('#clients').empty();
-    clients.map(le => {
-        let clientItem = $(`<h6>${le.name}</h6>`);
-        $('#clients').append(clientItem);
-
-        clientItem.click(() => {
-            console.log(le.id);
-        });
-    });
-}
-
-function displayClientsOnMap(clients) {
-
-
-    let geojson = {
-        "name": "Clients",
-        "type": "FeatureCollection",
-        "features": []
-    };
-
-
-    clients.map(cl => {
-        geojson.features.push(
-            {
-                type: "Feature",
-                geometry: {
-                    type: "Point",
-                    coordinates: [cl.longitude, cl.latitude]
-                },
-                properties: { ...cl }
-            }
-        );
-    });
-
-    map.getSource('clients').setData(geojson);
-}
-
-function setupClientLayers() {
-
-
-    map.addSource('clients', {
-        'type': 'geojson',
-        'data': null,
-        cluster: true,
-        clusterMaxZoom: 14, // Max zoom to cluster points on
-        clusterRadius: 50 // Radius of each cluster when clustering points (defaults to 50)
-    });
-
-    map.addLayer({
-        id: 'clients-clusters',
-        type: 'circle',
-        source: 'clients',
-        filter: ['has', 'point_count'],
-        paint: {
-            'circle-color': [
-                'step',
-                ['get', 'point_count'],
-                '#11bbd6',
-                100,
-                '#21f075',
-                750,
-                '#318cb1'
-            ],
-            'circle-radius': [
-                'step',
-                ['get', 'point_count'],
-                20,
-                100,
-                30,
-                750,
-                40
-            ]
-        }
-    });
-
-    map.addLayer({
-        id: 'clients-cluster-count',
-        type: 'symbol',
-        source: 'clients',
-        filter: ['has', 'point_count'],
-        layout: {
-            'text-field': ['get', 'point_count_abbreviated'],
-            'text-font': ['DIN Offc Pro Medium', 'Arial Unicode MS Bold'],
-            'text-size': 12
-        }
-    });
-
-    // inspect a cluster on click
-    map.on('click', 'clients-clusters', (e) => {
-        const features = map.queryRenderedFeatures(e.point, {
-            layers: ['clients-clusters']
-        });
-        const clusterId = features[0].properties.cluster_id;
-        map.getSource('clients').getClusterExpansionZoom(
-            clusterId,
-            (err, zoom) => {
-                if (err) return;
-
-                map.easeTo({
-                    center: features[0].geometry.coordinates,
-                    zoom: zoom
-                });
-            }
-        );
-    });
-
-
-
-
-    map.loadImage('markers/87d30f.png', (error, image) => {
-        if (error) throw error;
-        map.addImage('client-marker', image);
-
-        map.addLayer({
-            'id': 'clients-layer',
-            'source': 'clients',
-            "type": "symbol",
-            "filter": ['!', ['has', 'point_count']],
-            "layout": {
-                "icon-image": "client-marker",
-                "icon-allow-overlap": true,
-                'text-field': ['get', 'name'],
-                'text-offset': [0, 1.25],
-                'text-anchor': 'top'
-            }
-        });
-
-    });
-
-
-}
-
 function modalListenersSetup() {
     var clientsModalEl = document.getElementById('clientsModal');
 
@@ -636,7 +497,7 @@ function modalListenersSetup() {
         if (matchedClients && matchedClients.length > 0) {
             $('#noClient').hide();
             $('#clients-table-container').show();
-            $clientsTable.bootstrapTable({ data: matchedClients });
+            $clientsTable.bootstrapTable('load', matchedClients);
         }
     })
 
@@ -646,58 +507,75 @@ const initcap = (str) => str[0].toUpperCase() + str.substring(1).toLowerCase();
 
 
 let $clientsTable = $('#clients-table');
+$clientsTable.bootstrapTable();
 
 function regionFormatter(value) {
-    console.log(value);
     return value.map(region => initcap(region)).join(', ');
 }
 
 $('#btnSendLeadToClients').click(() => {
-    alert('are you sure!');
     // send selected lead to client
     /*
      * set client fields to sent []
      * set lead status to sent
      * move lead to send group
     */
+    clientsModal.hide();
+    bootbox.confirm('Are you sure to send the leads to the matched clients!',
+        function (result) {
+            if (result) {
 
-    console.log(matchedClients);
+                let sendGroupId = groupsOfSelectedBoard.find(c => c.title == 'send').id;
+                let leadStatusFieldId = columnsOfSelectedBoard.find(c => c.title == 'status').id;
+                let clientQueries = [];
+                matchedClients.forEach(function (value, i) {
 
-    let sendGroupId = groupsOfSelectedBoard.find(c => c.title == 'send').id;
-    let leadStatusFieldId = columnsOfSelectedBoard.find(c => c.title == 'status').id;
-    let clientQueries = [];
-    console.log(matchedClients);
-    matchedClients.forEach(function (value, i) {
+                    let clientFieldId = columnsOfSelectedBoard.find(c => c.title == value.name.toLowerCase()).id;
+                    clientQueries.push(`
+                                    set_client_field_of_lead_${i}: change_simple_column_value (board_id: ${selectedIndustry.boardId}, item_id: ${selectedLead.properties.id}, column_id: "${clientFieldId}", value: "${CLIENT_STATUS_SENT}") {
+                                        id
+                                    }
+                                    `);
+                });
 
-        let clientFieldId = columnsOfSelectedBoard.find(c => c.title == value.name.toLowerCase()).id;
-        clientQueries.push(`
-            set_client_field_of_lead_${i}: change_simple_column_value (board_id: ${selectedIndustry.boardId}, item_id: ${selectedLead.properties.id}, column_id: "${clientFieldId}", value: "${CLIENT_STATUS_SENT}") {
-                id
+                let query = `mutation {
+                                set_lead_status: change_simple_column_value (board_id: ${selectedIndustry.boardId}, item_id: ${selectedLead.properties.id}, column_id: "${leadStatusFieldId}", value: "${LEAD_STATUS_SENT}") {
+                                    id
+                                }
+                                ${clientQueries.join('\n')}
+                                move_to_sent_group: move_item_to_group(item_id: ${selectedLead.properties.id}, group_id: "${sendGroupId}") {
+                                    id
+                                }
+                            }`;
+
+                monday.api(query, {
+                    apiVersion: '2023-10',
+                    token: mondayToken
+                }).then(res => {
+                    listLeadsByIndustry();
+                    bootbox.alert({
+                        message: '<p><i class="fa fa-check"></i> The lead sent to the clien(s)',
+                        backdrop: true
+                    });
+
+                })
+                    .catch((error) => {
+                        console.log(error);
+
+                        bootbox.alert({
+                            message: '<p><i class="fa Example of exclamation-triangle fa-exclamation-triangle"></i> An error occured',
+                            backdrop: true
+                        });
+                    });
+            } else {
+                clientsModal.show();
             }
-            `);
-    });
+        });
 
-    let query = `mutation {
-            set_lead_status: change_simple_column_value (board_id: ${selectedIndustry.boardId}, item_id: ${selectedLead.properties.id}, column_id: "${leadStatusFieldId}", value: "${LEAD_STATUS_SENT}") {
-                id
-            }
-            ${clientQueries.join('\n')}
-            move_to_sent_group: move_item_to_group(item_id: ${selectedLead.properties.id}, group_id: "${sendGroupId}") {
-                id
-            }
-        }`;
 
-    monday.api(query, {
-    apiVersion: '2023-10',
-    token: mondayToken
-    }).then(res => {
-    
-    console.log('Lead sent to the client');
-    
-    });
 });
 
-function getBoardDetails(){
+function getBoardDetails() {
     let query = `query GetBoardItems{  
                     boards(ids: ${selectedIndustry.boardId}) {  
                         name
@@ -713,32 +591,31 @@ function getBoardDetails(){
                 }   
                 `;
 
-monday.api(query, {
-apiVersion: '2023-10',
-token: mondayToken
-}).then(res => {
+    monday.api(query, {
+        apiVersion: '2023-10',
+        token: mondayToken
+    }).then(res => {
 
-    groupsOfSelectedBoard = res.data.boards[0].groups;
-    columnsOfSelectedBoard = res.data.boards[0].columns;
+        groupsOfSelectedBoard = res.data.boards[0].groups;
+        columnsOfSelectedBoard = res.data.boards[0].columns;
 
-    groupsOfSelectedBoard = groupsOfSelectedBoard.map(group => {
-        return {
-            title : group.title.toLowerCase(),
-            id: group.id
-        }
+        groupsOfSelectedBoard = groupsOfSelectedBoard.map(group => {
+            return {
+                title: group.title.toLowerCase(),
+                id: group.id
+            }
+        });
+        columnsOfSelectedBoard = columnsOfSelectedBoard.map(group => {
+            return {
+                title: group.title.toLowerCase(),
+                id: group.id
+            }
+        });
+
     });
-    columnsOfSelectedBoard = columnsOfSelectedBoard.map(group => {
-        return {
-            title : group.title.toLowerCase(),
-            id: group.id
-        }
-    });
-
-});
 }
 
 // Status = Send
 // ClientColumn = Wysłany
 // Move to 'Send' group
 
-// https://docs.google.com/spreadsheets/d/e/2PACX-1vSXX8s55OGAtinS512CxTofxeajnRk6l8yWtMslGSoY9rrgPUMAdxktZvcD_MfHPpKTghv_niiDPcHh/pub?gid=0&single=true&output=csv
