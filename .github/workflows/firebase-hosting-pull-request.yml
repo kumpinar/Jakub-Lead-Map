@@ -13,6 +13,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      - name: Override js and css caches
+        uses: jacobtomlinson/gha-find-replace@v2
+        with:
+          find: "override_cache=deploy_version"
+          replace: "override_cache=${{ github.run_id }}"
+          include: "**index.html" 
       - uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
