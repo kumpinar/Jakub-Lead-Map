@@ -183,8 +183,10 @@ map.on('load', () => {
                 }
             });
             // find matched clients by region
-            if (matchedRegionName) {
-                matchedClients = clients.filter(c => c.regions.includes(matchedRegionName.toLowerCase()));
+            if (matchedRegionName ) {
+                if(clients && clients.length>0) {
+                    matchedClients = clients.filter(c => c.regions.includes(matchedRegionName.toLowerCase()));
+                }
 
                 $('#tdSelectedLead').html(features[0].properties.name);
                 $('#tdRegionOfSelectedLead').html(matchedRegionName);
@@ -507,7 +509,9 @@ const initcap = (str) => str[0].toUpperCase() + str.substring(1).toLowerCase();
 
 
 let $clientsTable = $('#clients-table');
-$clientsTable.bootstrapTable();
+$clientsTable.bootstrapTable({
+    clickToSelect: true
+});
 
 function regionFormatter(value) {
     return value.map(region => initcap(region)).join(', ');
@@ -521,52 +525,64 @@ $('#btnSendLeadToClients').click(() => {
      * move lead to send group
     */
     clientsModal.hide();
+    if($clientsTable.bootstrapTable('getSelections').length==0){
+        bootbox.alert('You need to select at least one client!', function() {
+            clientsModal.show();
+            });
+        return;
+    }
     bootbox.confirm('Are you sure to send the leads to the matched clients!',
         function (result) {
             if (result) {
 
+
+
                 let sendGroupId = groupsOfSelectedBoard.find(c => c.title == 'send').id;
                 let leadStatusFieldId = columnsOfSelectedBoard.find(c => c.title == 'status').id;
                 let clientQueries = [];
-                matchedClients.forEach(function (value, i) {
 
-                    let clientFieldId = columnsOfSelectedBoard.find(c => c.title == value.name.toLowerCase()).id;
-                    clientQueries.push(`
-                                    set_client_field_of_lead_${i}: change_simple_column_value (board_id: ${selectedIndustry.boardId}, item_id: ${selectedLead.properties.id}, column_id: "${clientFieldId}", value: "${CLIENT_STATUS_SENT}") {
+                // get selected clients
+                
+                    $clientsTable.bootstrapTable('getSelections').forEach(function (value, i) {
+
+                        let clientFieldId = columnsOfSelectedBoard.find(c => c.title == value.name.toLowerCase()).id;
+                        clientQueries.push(`
+                                        set_client_field_of_lead_${i}: change_simple_column_value (board_id: ${selectedIndustry.boardId}, item_id: ${selectedLead.properties.id}, column_id: "${clientFieldId}", value: "${CLIENT_STATUS_SENT}") {
+                                            id
+                                        }
+                                        `);
+                    });
+
+                    let query = `mutation {
+                                    set_lead_status: change_simple_column_value (board_id: ${selectedIndustry.boardId}, item_id: ${selectedLead.properties.id}, column_id: "${leadStatusFieldId}", value: "${LEAD_STATUS_SENT}") {
                                         id
                                     }
-                                    `);
-                });
+                                    ${clientQueries.join('\n')}
+                                    move_to_sent_group: move_item_to_group(item_id: ${selectedLead.properties.id}, group_id: "${sendGroupId}") {
+                                        id
+                                    }
+                                }`;
 
-                let query = `mutation {
-                                set_lead_status: change_simple_column_value (board_id: ${selectedIndustry.boardId}, item_id: ${selectedLead.properties.id}, column_id: "${leadStatusFieldId}", value: "${LEAD_STATUS_SENT}") {
-                                    id
-                                }
-                                ${clientQueries.join('\n')}
-                                move_to_sent_group: move_item_to_group(item_id: ${selectedLead.properties.id}, group_id: "${sendGroupId}") {
-                                    id
-                                }
-                            }`;
-
-                monday.api(query, {
-                    apiVersion: '2023-10',
-                    token: mondayToken
-                }).then(res => {
-                    listLeadsByIndustry();
-                    bootbox.alert({
-                        message: '<p><i class="fa fa-check"></i> The lead sent to the clien(s)',
-                        backdrop: true
-                    });
-
-                })
-                    .catch((error) => {
-                        console.log(error);
-
+                    monday.api(query, {
+                        apiVersion: '2023-10',
+                        token: mondayToken
+                    }).then(res => {
+                        listLeadsByIndustry();
                         bootbox.alert({
-                            message: '<p><i class="fa Example of exclamation-triangle fa-exclamation-triangle"></i> An error occured',
+                            message: '<p><i class="fa fa-check"></i> The lead sent to the client(s)',
                             backdrop: true
                         });
-                    });
+
+                    })
+                        .catch((error) => {
+                            console.log(error);
+
+                            bootbox.alert({
+                                message: '<p><i class="fa Example of exclamation-triangle fa-exclamation-triangle"></i> An error occured',
+                                backdrop: true
+                            });
+                        }); 
+                
             } else {
                 clientsModal.show();
             }
