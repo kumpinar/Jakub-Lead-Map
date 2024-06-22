@@ -370,7 +370,7 @@ function getClientsByIndustry() {
                 clients = results.data.map(d => {
                     return {
                         name : d['NAME'],
-                        regions : d['LOCATION'].toLowerCase().split(',')
+                        regions : d['REGION'].toLowerCase().split(',')
                     }
                 });
             }
