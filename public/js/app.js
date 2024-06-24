@@ -291,12 +291,13 @@ map.on('load', () => {
                     matchedClients = clients.filter(c => c.regions.includes(matchedRegionName.toLowerCase()));
                 }
 
-                //find clients in buffered areas 
-                console.log(map.querySourceFeatures('client-buffers'));
-
                 map.querySourceFeatures('client-buffers').forEach(currentFeature => {
                     if (turf.booleanWithin(selectedLead, currentFeature)) {
-                        matchedClients.push( clients.find(cl=> cl.name == currentFeature.properties.name) );
+                        const bufferedToAdd = clients.find(cl=> cl.name == currentFeature.properties.name);
+                        if(bufferedToAdd){
+                            let isAdded = matchedClients.filter(mc => mc.name==bufferedToAdd.name).length;
+                            if(isAdded == 0) matchedClients.push( bufferedToAdd);
+                        }
                     }
                 });
 
@@ -360,6 +361,7 @@ function listCountries() {
             map.getSource('regions').setData(c.regionBordersUrl);
             map.getSource('labels').setData(c.regionLabelsUrl);
             map.getSource('leads').setData({ "type": "FeatureCollection", "features": [] });
+            map.getSource('client-buffers').setData({ "type": "FeatureCollection", "features": [] });
 
             fetch(c.regionBordersUrl)
                 .then((response) => response.json())
@@ -477,6 +479,8 @@ function displayLeads(leads) {
 
 function getClientsByIndustry() {
     clients = null;
+    map.getSource('client-buffers').setData({ "type": "FeatureCollection", "features": [] });
+
     if (selectedIndustry.clientsCsvUrl) {
         Papa.parse(selectedIndustry.clientsCsvUrl + '&nocache=' + Math.floor(Math.random() * 100000000).toString(), {
             download: true,
