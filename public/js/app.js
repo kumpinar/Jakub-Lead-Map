@@ -28,6 +28,10 @@ const map = new mapboxgl.Map({
     zoom: 4
 });
 
+const popup = new mapboxgl.Popup({
+    closeButton: false
+});
+
 map.on('load', () => {
 
     toggleSidebar('left');
@@ -45,6 +49,105 @@ map.on('load', () => {
             'fill-color': 'rgba(200, 100, 240, 0.2)',
             'fill-outline-color': 'rgba(200, 100, 240, 1)'
         }
+    });
+
+    map.addLayer(
+        {
+            'id': 'regions-layer-highlighted',
+            'type': 'fill',
+            'source': 'regions',
+            'paint': {
+                'fill-color': 'rgba(200, 100, 240, 0.5)',
+                'fill-outline-color': 'rgba(200, 100, 240, 1)'
+            },
+            'filter': ['in', 'name', '']
+        }
+    );
+
+    map.on('mousemove', 'regions-layer', (e) => {
+        const regionName = e.features[0].properties.name;
+        map.setFilter('regions-layer-highlighted', [
+            'in',
+            'name',
+            regionName
+        ]);
+
+        if (clients) {
+
+            //find clients by region name
+            let popupContent = 'Clients in Region: ' + regionName;
+            popupContent += '<ul>';
+            clients.filter(cl => cl.regions.includes(regionName.toLowerCase())).forEach(cn => {
+                popupContent += `<li>${cn.name}</li>`;
+            });
+            popupContent += '</ul>';
+
+            const bufferedClients = map.queryRenderedFeatures(e.point,{layers: ['client-buffers-layer']});
+
+            if(bufferedClients && bufferedClients.length > 0){
+                popupContent += 'Clients in Buffered Area: ';
+                popupContent += '<br><ul>';
+                bufferedClients.forEach(cn => {
+                    popupContent += `<li>${cn.properties.name}</li>`;
+                });
+                popupContent += '</ul>';
+            }
+
+            popup
+                .setLngLat(e.lngLat)
+                .setHTML(popupContent)
+                .addTo(map);
+        }
+
+    });
+
+    map.on('mouseleave', 'regions-layer', () => {
+        popup.remove();
+        map.setFilter('regions-layer-highlighted', ['in', 'name', '']);
+    });
+
+
+    map.addSource('client-buffers', {
+        'type': 'geojson',
+        'data': null
+    });
+
+    map.addLayer({
+        'id': 'client-buffers-layer',
+        'type': 'fill',
+        'source': 'client-buffers',
+        'paint': {
+            'fill-color': 'rgba(100, 200, 240, 0.2)',
+            'fill-outline-color': 'rgba(100, 200, 240, 1)'
+        }
+    });
+
+    map.addLayer(
+        {
+            'id': 'client-buffers-layer-highlighted',
+            'type': 'fill',
+            'source': 'client-buffers',
+            'paint': {
+                'fill-color': 'rgba(100, 200, 240, 0.5)',
+                'fill-outline-color': 'rgba(100, 200, 240, 1)'
+            },
+            'filter': ['in', 'name', '']
+        }
+    );
+
+
+
+    map.on('mousemove', 'client-buffers-layer', (e) => {
+        map.setFilter('client-buffers-layer-highlighted', [
+            'in',
+            'name',
+            e.features[0].properties.name
+        ]);
+
+    });
+
+    map.on('mouseleave', 'client-buffers-layer', () => {
+        map.setFilter('client-buffers-layer-highlighted', ['in', 'name', '']);
     });
 
     map.addSource('labels', {
@@ -183,10 +286,20 @@ map.on('load', () => {
                 }
             });
             // find matched clients by region
-            if (matchedRegionName ) {
-                if(clients && clients.length>0) {
+            if (matchedRegionName) {
+                if (clients && clients.length > 0) {
                     matchedClients = clients.filter(c => c.regions.includes(matchedRegionName.toLowerCase()));
                 }
+
+                //find clients in buffered areas 
+                console.log(map.querySourceFeatures('client-buffers'));
+
+                map.querySourceFeatures('client-buffers').forEach(currentFeature => {
+                    if (turf.booleanWithin(selectedLead, currentFeature)) {
+                        matchedClients.push( clients.find(cl=> cl.name == currentFeature.properties.name) );
+                    }
+                });
+
 
                 $('#tdSelectedLead').html(features[0].properties.name);
                 $('#tdRegionOfSelectedLead').html(matchedRegionName);
@@ -341,7 +454,9 @@ function listLeadsByIndustry() {
         getBoardDetails();
 
         displayLeads(selectedLeads);
-        createAddressIfNotExist(selectedLeads.map(l => l.address));
+        createAddressIfNotExist(selectedLeads.map(l => l.address), function () {
+            displayLeadsOnMap();
+        });
 
     });
 
@@ -363,16 +478,19 @@ function displayLeads(leads) {
 function getClientsByIndustry() {
     clients = null;
     if (selectedIndustry.clientsCsvUrl) {
-       Papa.parse(selectedIndustry.clientsCsvUrl + '&nocache=' + Math.floor(Math.random()*100000000).toString(), {
+        Papa.parse(selectedIndustry.clientsCsvUrl + '&nocache=' + Math.floor(Math.random() * 100000000).toString(), {
             download: true,
             header: true,
-            complete: function(results) {
+            complete: function (results) {
                 clients = results.data.map(d => {
                     return {
-                        name : d['NAME'],
-                        regions : d['REGION'].toLowerCase().split(',')
+                        name: d['NAME'],
+                        regions: d['REGION'] == '' ? [] : d['REGION'].toLowerCase().split(','),
+                        city: d['CITY'] == '' ? null : d['CITY'],
+                        cityBufferKm: d['BUFFER IN KM'] == '' ? null : Number(d['BUFFER IN KM'])
                     }
                 });
+                getCityCoordinatesOfClients();
             }
         });
     };
@@ -393,7 +511,7 @@ firebase.analytics();
 const db = firebase.firestore();
 
 
-function createAddressIfNotExist(addresses) {
+function createAddressIfNotExist(addresses, callback) {
     let addressCreatePromises = [];
     let addressCheckPromises = [];
 
@@ -421,7 +539,9 @@ function createAddressIfNotExist(addresses) {
         });
         Promise.all(addressCreatePromises).then((values) => {
             //display them on map
-            displayLeadsOnMap();
+            if (typeof callback === "function") {
+                callback();
+            }
         });
     });
 
@@ -513,8 +633,13 @@ $clientsTable.bootstrapTable({
     clickToSelect: true
 });
 
-function regionFormatter(value) {
-    return value.map(region => initcap(region)).join(', ');
+function regionFormatter(value, row) {
+    if(value && value.length > 0){
+        return value.map(region => initcap(region)).join(', ');
+    }
+    else {
+        return row.city +' + '+row.cityBufferKm + 'km';
+    }
 }
 
 $('#btnSendLeadToClients').click(() => {
@@ -525,10 +650,10 @@ $('#btnSendLeadToClients').click(() => {
      * move lead to send group
     */
     clientsModal.hide();
-    if($clientsTable.bootstrapTable('getSelections').length==0){
-        bootbox.alert('You need to select at least one client!', function() {
+    if ($clientsTable.bootstrapTable('getSelections').length == 0) {
+        bootbox.alert('You need to select at least one client!', function () {
             clientsModal.show();
-            });
+        });
         return;
     }
     bootbox.confirm('Are you sure to send the leads to the matched clients!',
@@ -542,18 +667,18 @@ $('#btnSendLeadToClients').click(() => {
                 let clientQueries = [];
 
                 // get selected clients
-                
-                    $clientsTable.bootstrapTable('getSelections').forEach(function (value, i) {
 
-                        let clientFieldId = columnsOfSelectedBoard.find(c => c.title == value.name.toLowerCase()).id;
-                        clientQueries.push(`
+                $clientsTable.bootstrapTable('getSelections').forEach(function (value, i) {
+
+                    let clientFieldId = columnsOfSelectedBoard.find(c => c.title == value.name.toLowerCase()).id;
+                    clientQueries.push(`
                                         set_client_field_of_lead_${i}: change_simple_column_value (board_id: ${selectedIndustry.boardId}, item_id: ${selectedLead.properties.id}, column_id: "${clientFieldId}", value: "${CLIENT_STATUS_SENT}") {
                                             id
                                         }
                                         `);
-                    });
+                });
 
-                    let query = `mutation {
+                let query = `mutation {
                                     set_lead_status: change_simple_column_value (board_id: ${selectedIndustry.boardId}, item_id: ${selectedLead.properties.id}, column_id: "${leadStatusFieldId}", value: "${LEAD_STATUS_SENT}") {
                                         id
                                     }
@@ -563,26 +688,26 @@ $('#btnSendLeadToClients').click(() => {
                                     }
                                 }`;
 
-                    monday.api(query, {
-                        apiVersion: '2023-10',
-                        token: mondayToken
-                    }).then(res => {
-                        listLeadsByIndustry();
+                monday.api(query, {
+                    apiVersion: '2023-10',
+                    token: mondayToken
+                }).then(res => {
+                    listLeadsByIndustry();
+                    bootbox.alert({
+                        message: '<p><i class="fa fa-check"></i> The lead sent to the client(s)',
+                        backdrop: true
+                    });
+
+                })
+                    .catch((error) => {
+                        console.log(error);
+
                         bootbox.alert({
-                            message: '<p><i class="fa fa-check"></i> The lead sent to the client(s)',
+                            message: '<p><i class="fa Example of exclamation-triangle fa-exclamation-triangle"></i> An error occured',
                             backdrop: true
                         });
+                    });
 
-                    })
-                        .catch((error) => {
-                            console.log(error);
-
-                            bootbox.alert({
-                                message: '<p><i class="fa Example of exclamation-triangle fa-exclamation-triangle"></i> An error occured',
-                                backdrop: true
-                            });
-                        }); 
-                
             } else {
                 clientsModal.show();
             }
@@ -630,6 +755,63 @@ function getBoardDetails() {
 
     });
 }
+
+function getCityCoordinatesOfClients() {
+    let clientsWithCity = clients.filter(c => c.city && c.city != '');
+    console.log(clientsWithCity.map(c => c.city + ' ' + selectedCountry));
+    createAddressIfNotExist(clientsWithCity.map(c => c.city + ' ' + selectedCountry), function () {
+        polulateClientCoordinates();
+    });
+}
+
+function polulateClientCoordinates() {
+    let clientsWithCity = clients.filter(c => c.city && c.city != '');
+    let uniqueAdresses = clientsWithCity.map(c => c.city + ' ' + selectedCountry);
+    uniqueAdresses = uniqueAdresses.filter(onlyUnique);
+
+    const batches = [];
+
+    while (uniqueAdresses.length) {
+        // firestore limits batches to 10
+        const batch = uniqueAdresses.splice(0, 10);
+
+        // add the batch request to to a queue
+        batches.push(
+            db.collection('address_book')
+                .where(
+                    'address',
+                    'in',
+                    [...batch]
+                )
+                .get()
+                .then(results => results.docs.map(result => ({ /* id: result.id, */ ...result.data() })))
+        )
+    }
+
+    Promise.all(batches)
+        .then(content => {
+            content.flat().forEach(addressData => {
+                clientsWithCity.filter(c => c.city + ' ' + selectedCountry == addressData.address).forEach(c => {
+                    c['latitude'] = addressData.latitude;
+                    c['longitude'] = addressData.longitude;
+                });
+            });
+
+            let clientBufferGeojson = turf.featureCollection(
+                clientsWithCity.map(cl => {
+                    let point = turf.point([cl.longitude, cl.latitude]);
+                    let feature = turf.buffer(point, cl.cityBufferKm);
+                    feature.properties['name'] = cl.name;
+                    return feature;
+                })
+            );
+
+            map.getSource('client-buffers').setData(clientBufferGeojson);
+
+        });
+
+}
+
 
 // Status = Send
 // ClientColumn = Wysłany
