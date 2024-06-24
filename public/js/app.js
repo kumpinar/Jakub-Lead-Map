@@ -118,7 +118,7 @@ map.on('load', () => {
         'source': 'client-buffers',
         'paint': {
             'fill-color': 'rgba(100, 200, 240, 0.2)',
-            'fill-outline-color': 'rgba(100, 200, 240, 1)'
+            'fill-outline-color': 'rgba(26, 26, 26, 1)'
         }
     });
 
@@ -129,7 +129,7 @@ map.on('load', () => {
             'source': 'client-buffers',
             'paint': {
                 'fill-color': 'rgba(100, 200, 240, 0.5)',
-                'fill-outline-color': 'rgba(100, 200, 240, 1)'
+                'fill-outline-color': 'rgba(26, 26, 26, 1)'
             },
             'filter': ['in', 'name', '']
         }
