@@ -320,6 +320,8 @@ map.on('load', () => {
 
     if (mondayToken == null) {
         showModalToSetToken();
+    } else {
+        checkMondayToken();
     }
 });
 
@@ -347,6 +349,7 @@ function showModalToSetToken() {
         callback: function (result) {
             mondayToken = result;
             localStorage.setItem('monday-token', mondayToken);
+            checkMondayToken();
         }
     });
 }
@@ -815,6 +818,21 @@ function polulateClientCoordinates() {
         });
 
 }
+
+
+function checkMondayToken(){
+    monday.api(`query { users { id, name } }`, {
+        apiVersion: '2023-10',
+        token: mondayToken
+    }).then(res => {
+        console.log(res);
+    }).catch(err => {
+        localStorage.removeItem('monday-token');
+        mondayToken = null;
+        showModalToSetToken();
+    });
+}
+
 
 
 // Status = Send
