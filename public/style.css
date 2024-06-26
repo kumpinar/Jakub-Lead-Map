@@ -117,3 +117,14 @@ The toggleSidebar() function removes this class from the element in order to exp
 #industries li:hover { 
     background-color: #bec1c2;
 }
+
+#leads { 
+ list-style: none;
+}
+
+#leads h6 { 
+    cursor:pointer;
+}
+#leads h6:hover { 
+    background-color: #bec1c2;
+}

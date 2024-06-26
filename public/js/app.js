@@ -475,7 +475,8 @@ function displayLeads(leads) {
         $('#leads').append(leadItem);
 
         leadItem.click(() => {
-            console.log(le.id);
+            console.log(le);
+            map.flyTo({center: [le.longitude, le.latitude], zoom: 12});
         });
     });
 }
