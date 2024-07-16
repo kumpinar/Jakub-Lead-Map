@@ -77,8 +77,8 @@ map.on('load', () => {
             //find clients by region name
             let popupContent = 'Clients in Region: ' + regionName;
             popupContent += '<ul>';
-            clients.filter(cl => cl.regions.includes(regionName.toLowerCase())).forEach(cn => {
-                popupContent += `<li>${cn.name}</li>`;
+            clients.filter(cl => cl.regions.includes(regionName.trim().toLowerCase())).forEach(cn => {
+                popupContent += `<li>${cn.name}${checkClientNameWithBoardColumn(cn.name)}</li>`;
             });
             popupContent += '</ul>';
 
@@ -88,7 +88,7 @@ map.on('load', () => {
                 popupContent += 'Clients in Buffered Area: ';
                 popupContent += '<br><ul>';
                 bufferedClients.forEach(cn => {
-                    popupContent += `<li>${cn.properties.name}</li>`;
+                    popupContent += `<li>${cn.properties.name}${checkClientNameWithBoardColumn(cn.properties.name)}</li>`;
                 });
                 popupContent += '</ul>';
             }
@@ -288,7 +288,7 @@ map.on('load', () => {
             // find matched clients by region
             if (matchedRegionName) {
                 if (clients && clients.length > 0) {
-                    matchedClients = clients.filter(c => c.regions.includes(matchedRegionName.toLowerCase()));
+                    matchedClients = clients.filter(c => c.regions.includes(matchedRegionName.trim().toLowerCase()));
                 }
 
                 map.querySourceFeatures('client-buffers').forEach(currentFeature => {
@@ -493,7 +493,7 @@ function getClientsByIndustry() {
                 clients = results.data.map(d => {
                     return {
                         name: d['NAME'],
-                        regions: d['REGION'] == '' ? [] : d['REGION'].toLowerCase().split(','),
+                        regions: d['REGION'] == '' ? [] : d['REGION'].trim().toLowerCase().split(','),
                         city: d['CITY'] == '' ? null : d['CITY'],
                         cityBufferKm: d['BUFFER IN KM'] == '' ? null : Number(d['BUFFER IN KM'])
                     }
@@ -678,7 +678,7 @@ $('#btnSendLeadToClients').click(() => {
 
                 $clientsTable.bootstrapTable('getSelections').forEach(function (value, i) {
 
-                    let clientFieldId = columnsOfSelectedBoard.find(c => c.title == value.name.toLowerCase()).id;
+                    let clientFieldId = columnsOfSelectedBoard.find(c => c.title == value.name.trim().toLowerCase()).id;
                     clientQueries.push(`
                                         set_client_field_of_lead_${i}: change_simple_column_value (board_id: ${selectedIndustry.boardId}, item_id: ${selectedLead.properties.id}, column_id: "${clientFieldId}", value: "${CLIENT_STATUS_SENT}") {
                                             id
@@ -750,13 +750,13 @@ function getBoardDetails() {
 
         groupsOfSelectedBoard = groupsOfSelectedBoard.map(group => {
             return {
-                title: group.title.toLowerCase(),
+                title: group.title.trim().toLowerCase(),
                 id: group.id
             }
         });
         columnsOfSelectedBoard = columnsOfSelectedBoard.map(group => {
             return {
-                title: group.title.toLowerCase(),
+                title: group.title.trim().toLowerCase(),
                 id: group.id
             }
         });
@@ -832,6 +832,17 @@ function checkMondayToken(){
         mondayToken = null;
         showModalToSetToken();
     });
+}
+
+
+
+function checkClientNameWithBoardColumn(clientName) {
+    let isNameAndColumnTitleMatched = columnsOfSelectedBoard.filter(col => col.title == clientName.trim().toLowerCase()).length > 0;
+
+    if(isNameAndColumnTitleMatched == false ){
+        return '<span style="color:red;"> Check coumn title on the board</span>'
+    }
+    return '';
 }
 
 
