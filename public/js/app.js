@@ -304,6 +304,8 @@ map.on('load', () => {
 
                 $('#tdSelectedLead').html(features[0].properties.name);
                 $('#tdRegionOfSelectedLead').html(matchedRegionName);
+                $('#tdLeadNotes').html(features[0].properties.note.trim('"'));
+                console.log(features[0].properties);
             }
 
 
@@ -390,8 +392,10 @@ function listIndustriesByCountry() {
         $('#industries').append(industryItem);
         industryItem.click(() => {
             selectedIndustry = i;
-            listLeadsByIndustry();
-            getClientsByIndustry();
+            getBoardDetails(function(){
+                listLeadsByIndustry();
+                getClientsByIndustry();
+            });
             // listClientsByIndustry(i, countryName); // no need to show clients on map, for now
         });
     });
@@ -403,7 +407,9 @@ function listLeadsByIndustry() {
                             <span class="visually-hidden">Loading...</span>
                         </div>
                     `);
-
+    
+    let noteFieldId = columnsOfSelectedBoard.find(c => c.title == 'notatka').id;
+    let cityFieldId = columnsOfSelectedBoard.find(c => c.title == 'miejscowość').id;
     let query = `query GetBoardItems{  
             boards(ids: [${selectedIndustry.boardId}]) {  
                 name
@@ -413,7 +419,7 @@ function listLeadsByIndustry() {
                         items {  
                             id  
                             name 
-                            column_values(ids: ["email", "lead_email" "tekst7", "long_text5"]) {  
+                            column_values(ids: ["email", "lead_email", "${cityFieldId}", "${noteFieldId}"]) {  
                                 id  
                                 value  
                             }  
@@ -434,7 +440,7 @@ function listLeadsByIndustry() {
             g.items_page.items.map(li => {
                 let leadEmail = JSON.parse(li.column_values.filter(cv => cv.id == 'email' || cv.id == 'lead_email')[0].value)?.email;
                 let leadCity = '';
-                const cityColumn = li.column_values.filter(cv => cv.id != 'email' && cv.id != 'lead_email')[0].value;
+                const cityColumn = li.column_values.filter(cv => cv.id == cityFieldId)[0].value;
                 if (cityColumn.startsWith('{')) {
                     leadCity = JSON.parse(cityColumn).text;
                 }
@@ -450,13 +456,12 @@ function listLeadsByIndustry() {
                     name: li.name,
                     email: leadEmail,
                     city: leadCity,
-                    address: leadCity + ' ' + selectedCountry
+                    address: leadCity + ' ' + selectedCountry, 
+                    note: li.column_values.filter(cv => cv.id == noteFieldId)[0].value
                 });
             });
 
         });
-
-        getBoardDetails();
 
         displayLeads(selectedLeads);
         createAddressIfNotExist(selectedLeads.map(l => l.address), function () {
@@ -724,7 +729,7 @@ $('#btnSendLeadToClients').click(() => {
 
 });
 
-function getBoardDetails() {
+function getBoardDetails(callback) {
     let query = `query GetBoardItems{  
                     boards(ids: ${selectedIndustry.boardId}) {  
                         name
@@ -760,6 +765,11 @@ function getBoardDetails() {
                 id: group.id
             }
         });
+
+        
+        if (typeof callback === "function") {
+            callback();
+        }
 
     });
 }
