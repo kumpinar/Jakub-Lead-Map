@@ -305,7 +305,6 @@ map.on('load', () => {
                 $('#tdSelectedLead').html(features[0].properties.name);
                 $('#tdRegionOfSelectedLead').html(matchedRegionName);
                 $('#tdLeadNotes').html(features[0].properties.note.trim('"'));
-                console.log(features[0].properties);
             }
 
 
@@ -449,6 +448,11 @@ function listLeadsByIndustry() {
                 }
 
                 leadCity = leadCity.replaceAll('\"', '');
+                leadNote = li.column_values.filter(cv => cv.id == noteFieldId)[0].value;
+                try {
+                    let noteJson=JSON.parse(leadNote);
+                    if(noteJson.text) leadNote = noteJson.text;
+                } catch (e) {}
 
 
                 selectedLeads.push({
@@ -457,7 +461,7 @@ function listLeadsByIndustry() {
                     email: leadEmail,
                     city: leadCity,
                     address: leadCity + ' ' + selectedCountry, 
-                    note: li.column_values.filter(cv => cv.id == noteFieldId)[0].value
+                    note: leadNote
                 });
             });
 
@@ -480,7 +484,6 @@ function displayLeads(leads) {
         $('#leads').append(leadItem);
 
         leadItem.click(() => {
-            console.log(le);
             map.flyTo({center: [le.longitude, le.latitude], zoom: 12});
         });
     });
@@ -776,7 +779,6 @@ function getBoardDetails(callback) {
 
 function getCityCoordinatesOfClients() {
     let clientsWithCity = clients.filter(c => c.city && c.city != '');
-    console.log(clientsWithCity.map(c => c.city + ' ' + selectedCountry));
     createAddressIfNotExist(clientsWithCity.map(c => c.city + ' ' + selectedCountry), function () {
         polulateClientCoordinates();
     });
