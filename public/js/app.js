@@ -29,7 +29,8 @@ const map = new mapboxgl.Map({
 });
 
 const popup = new mapboxgl.Popup({
-    closeButton: false
+    closeButton: false,
+    className: 'clients-popup'
 });
 
 map.on('load', () => {
@@ -78,7 +79,14 @@ map.on('load', () => {
             let popupContent = 'Clients in Region: ' + regionName;
             popupContent += '<ul>';
             clients.filter(cl => cl.regions.includes(regionName.trim().toLowerCase())).forEach(cn => {
-                popupContent += `<li>${cn.name}${checkClientNameWithBoardColumn(cn.name)}</li>`;
+                popupContent += `<li>
+                                    ${cn.name} 
+                                    ${checkClientNameWithBoardColumn(cn.name)} 
+                                     <div client-name="${encodeURIComponent(cn.name)}" class="spinner-border client-total-leads-spinner" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div> 
+                                    <span client-name="${encodeURIComponent(cn.name)}" class="badge rounded-pill text-bg-info lead-count"></span>
+                                </li>`;
             });
             popupContent += '</ul>';
 
@@ -88,7 +96,15 @@ map.on('load', () => {
                 popupContent += 'Clients in Buffered Area: ';
                 popupContent += '<br><ul>';
                 bufferedClients.forEach(cn => {
-                    popupContent += `<li>${cn.properties.name}${checkClientNameWithBoardColumn(cn.properties.name)}</li>`;
+                    popupContent += `
+                    <li>
+                        ${cn.properties.name} 
+                        ${checkClientNameWithBoardColumn(cn.properties.name)}  
+                        <div client-name="${encodeURIComponent(cn.properties.name)}" class="spinner-border client-total-leads-spinner" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div> 
+                        <span client-name="${encodeURIComponent(cn.properties.name)}"  class="badge rounded-pill text-bg-info lead-count"></span>
+                    </li>`;
                 });
                 popupContent += '</ul>';
             }
@@ -97,6 +113,7 @@ map.on('load', () => {
                 .setLngLat(e.lngLat)
                 .setHTML(popupContent)
                 .addTo(map);
+            populateClientTotalLeadsOnMapPopup();
         }
 
     });
@@ -666,9 +683,10 @@ function regionFormatter(value, row) {
 }
 
 function clientNameFormatter(value, row) {
-    return value + ` <div client-name="${value}" class="spinner-border client-total-leads-spinner" role="status">
+    return value + ` <div client-name="${encodeURIComponent(value)}" class="spinner-border client-total-leads-spinner" role="status">
                                     <span class="visually-hidden">Loading...</span>
-                                </div> <span  class="badge rounded-pill text-bg-info"></span>`;
+                                </div> 
+                    <span client-name="${encodeURIComponent(value)}"   class="badge rounded-pill text-bg-info lead-count"></span>`;
 }
 
 $('#btnSendLeadToClients').click(() => {
@@ -872,8 +890,19 @@ function checkClientNameWithBoardColumn(clientName) {
 
 function getNumberOfSendLeads(clientName, spinnerElement) {
     //let sendGroupId = groupsOfSelectedBoard.find(c => c.title == 'send').id;
+    let client = clients.find(cl => cl.name == clientName);
     let clientColumn = columnsOfSelectedBoard.find(c => c.title == clientName.trim().toLowerCase());
+
     if(clientColumn) {
+        if (!Object.keys(client).includes('numberOfSentLeads')){
+            client['numberOfSentLeads'] = '...';
+        } else{
+            //spinnerElement.next().html(` (${client.numberOfSentLeads}/${client.orderedLeads??'unknown'})`  );
+            $('#clients-table').find(`.lead-count[client-name='${encodeURIComponent(client.name)}']`).html(` (${client.numberOfSentLeads}/${client.orderedLeads??'unknown'})`);
+            $('.clients-popup').find(`.lead-count[client-name='${encodeURIComponent(client.name)}']`).html(` (${client.numberOfSentLeads}/${client.orderedLeads??'unknown'})`);
+            spinnerElement.remove();
+            return;
+        }
         let clientFieldId = clientColumn.id;
         let query = `
             query {
@@ -892,20 +921,30 @@ function getNumberOfSendLeads(clientName, spinnerElement) {
             apiVersion: '2023-10',
             token: mondayToken
         }).then(res => {
-            let orderedLeadsCount = clients.find(cl => cl.name==clientName)?.orderedLeads;
             let sendLeadsCount = res.data.boards[0].items_page.items.length;
-            spinnerElement.next().html(` (${sendLeadsCount}/${orderedLeadsCount??'unknown'})`  );
+            //spinnerElement.next().html(` (${sendLeadsCount}/${client.orderedLeads??'unknown'})`  );
             spinnerElement.remove();
+            $('#clients-table').find(`.lead-count[client-name='${encodeURIComponent(client.name)}']`).html(` (${sendLeadsCount}/${client.orderedLeads??'unknown'})`);
+            $('.clients-popup').find(`.lead-count[client-name='${encodeURIComponent(client.name)}']`).html(` (${sendLeadsCount}/${client.orderedLeads??'unknown'})`);
+            client['numberOfSentLeads'] = sendLeadsCount;
         });
     } else {
         spinnerElement.remove();
+        $('#clients-table').find(`.lead-count[client-name='${encodeURIComponent(client.name)}']`).remove();
+        $('.clients-popup').find(`.lead-count[client-name='${encodeURIComponent(client.name)}']`).remove();
     }
 
 }
 
 function populateClientTotalLeads(){
     $('#clients-table').find('.client-total-leads-spinner').each(function(){
-        getNumberOfSendLeads($(this).attr('client-name'), $(this) );
+        getNumberOfSendLeads(decodeURIComponent($(this).attr('client-name')), $(this) );
+    });
+}
+
+function populateClientTotalLeadsOnMapPopup(){
+    $('.clients-popup').find('.client-total-leads-spinner').each(function(){
+        getNumberOfSendLeads(decodeURIComponent($(this).attr('client-name')), $(this) );
     });
 }
 
