@@ -391,6 +391,11 @@ function listIndustriesByCountry() {
         $('#industries').append(industryItem);
         industryItem.click(() => {
             selectedIndustry = i;
+            $('#leads').html(`
+                                <div class="spinner-border" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                            `);
             getBoardDetails(function(){
                 listLeadsByIndustry();
                 getClientsByIndustry();
@@ -402,10 +407,10 @@ function listIndustriesByCountry() {
 
 function listLeadsByIndustry() {
     $('#leads').html(`
-                        <div class="spinner-border" role="status">
-                            <span class="visually-hidden">Loading...</span>
-                        </div>
-                    `);
+        <div class="spinner-border" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    `);
     
     let noteFieldId = columnsOfSelectedBoard.find(c => c.title == 'notatka').id;
     let cityFieldId = columnsOfSelectedBoard.find(c => c.title == 'miejscowość').id;
@@ -498,12 +503,13 @@ function getClientsByIndustry() {
             download: true,
             header: true,
             complete: function (results) {
-                clients = results.data.map(d => {
+                clients = results.data.filter(d => d['NAME']!='').map(d => {
                     return {
                         name: d['NAME'],
                         regions: d['REGION'] == '' ? [] : d['REGION'].trim().toLowerCase().split(','),
                         city: d['CITY'] == '' ? null : d['CITY'],
-                        cityBufferKm: d['BUFFER IN KM'] == '' ? null : Number(d['BUFFER IN KM'])
+                        cityBufferKm: d['BUFFER IN KM'] == '' ? null : Number(d['BUFFER IN KM']),
+                        orderedLeads: d['ORDERED LEADS'] == '' ? null : Number(d['ORDERED LEADS']),
                     }
                 });
                 getCityCoordinatesOfClients();
@@ -636,6 +642,7 @@ function modalListenersSetup() {
             $('#noClient').hide();
             $('#clients-table-container').show();
             $clientsTable.bootstrapTable('load', matchedClients);
+            populateClientTotalLeads();
         }
     })
 
@@ -656,6 +663,12 @@ function regionFormatter(value, row) {
     else {
         return row.city +' + '+row.cityBufferKm + 'km';
     }
+}
+
+function clientNameFormatter(value, row) {
+    return value + ` <div client-name="${value}" class="spinner-border client-total-leads-spinner" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div> <span  class="badge rounded-pill text-bg-info"></span>`;
 }
 
 $('#btnSendLeadToClients').click(() => {
@@ -855,6 +868,45 @@ function checkClientNameWithBoardColumn(clientName) {
         return '<span style="color:red;"> Check coumn title on the board</span>'
     }
     return '';
+}
+
+function getNumberOfSendLeads(clientName, spinnerElement) {
+    //let sendGroupId = groupsOfSelectedBoard.find(c => c.title == 'send').id;
+    let clientColumn = columnsOfSelectedBoard.find(c => c.title == clientName.trim().toLowerCase());
+    if(clientColumn) {
+        let clientFieldId = clientColumn.id;
+        let query = `
+            query {
+                boards (ids: ${selectedIndustry.boardId}) {
+                    items_page (query_params: {rules: [{column_id: "${clientFieldId}", compare_value: 1 }]}) {
+                    items {
+                        id
+                        name
+                    }
+                    }
+                }
+            }
+            `;
+
+        monday.api(query, {
+            apiVersion: '2023-10',
+            token: mondayToken
+        }).then(res => {
+            let orderedLeadsCount = clients.find(cl => cl.name==clientName)?.orderedLeads;
+            let sendLeadsCount = res.data.boards[0].items_page.items.length;
+            spinnerElement.next().html(` (${sendLeadsCount}/${orderedLeadsCount??'unknown'})`  );
+            spinnerElement.remove();
+        });
+    } else {
+        spinnerElement.remove();
+    }
+
+}
+
+function populateClientTotalLeads(){
+    $('#clients-table').find('.client-total-leads-spinner').each(function(){
+        getNumberOfSendLeads($(this).attr('client-name'), $(this) );
+    });
 }
 
 

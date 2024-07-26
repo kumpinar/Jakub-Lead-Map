@@ -128,3 +128,12 @@ The toggleSidebar() function removes this class from the element in order to exp
 #leads h6:hover { 
     background-color: #bec1c2;
 }
+
+.client-total-leads-spinner {
+    width: 15px;
+    height: 15px;
+    border-bottom-width: 1px;
+    border-top-width: 1px;
+    border-left-width: 1px;
+    border-right-width: 1px;
+}
