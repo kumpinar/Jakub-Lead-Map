@@ -1,6 +1,7 @@
 const countries = [
     {
         name: 'Poland',
+        name_pl: 'Polska',
         code: 'pl',
         regionBordersUrl: 'data/poland.json',
         regionLabelsUrl: 'data/poland-labels.json',
@@ -8,99 +9,72 @@ const countries = [
             {
                 name: 'Photovoltaic',
                 boardId: '1284229859',
-                goodGroupIds: ['nowa_grupa24985'], // nowa_grupa10322: this is Send group used for testing.  'new_group17485': Good B2B
-                cityFieldId: 'long_text5',
                 clientsCsvUrl:  'https://docs.google.com/spreadsheets/d/e/2PACX-1vSXX8s55OGAtinS512CxTofxeajnRk6l8yWtMslGSoY9rrgPUMAdxktZvcD_MfHPpKTghv_niiDPcHh/pub?gid=0&single=true&output=csv'
             },
             {
                 name: 'Heat Pumps',
                 boardId: '1296342797',
-                goodGroupIds: ['nowa_grupa59169'],
-                cityFieldId: 'tekst7'
+                clientsCsvUrl: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRd_AvAtUBzqVqmGS2V6xUXwqeOSklIewuJd_RUEigTX4YFkBuoLTW7zHfjIqwQFr7ZLEdYcDMdjRXy/pub?gid=0&single=true&output=csv'
             },
             {
                 name: 'Thermal Modernization',
                 boardId: '1323630417',
-                goodGroupIds: ['nowa_grupa4982'],
-                cityFieldId: 'tekst7'
+                clientsCsvUrl: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQh7p_EBtwAkRfGbRcswXe_dFCg3g05cfGikBQPV8_ur9l_4kBNKK9kj8ET3nFyIxck6d37UW9QcjJj/pub?gid=0&single=true&output=csv'
             },
             {
                 name: 'SKD',
                 boardId: '1410697073',
-                goodGroupIds: ['nowa_grupa36356'],
-                cityFieldId: 'tekst7'
+                clientsCsvUrl: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTnJxEHg9Dk74Hz0_CR_sBDnVIZXoDfvYH1D3boNi20f6jIYQpM7Gk2CQ3LhqgMuLkZKzl7DzaQZxtE/pub?gid=0&single=true&output=csv'
             },
             {
                 name: 'Swiss Franc Loans',
                 boardId: '1305290023',
-                goodGroupIds: ['nowa_grupa36356'],
-                cityFieldId: 'tekst7'
+                clientsCsvUrl: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQtebdLiHbYFqFjZNSXuTD3-u6z4lAZhQPA4lL9Q6uzYM5jK0OE9OcN98D0WlbHnVvxa8z6SRIbWDLZ/pub?gid=0&single=true&output=csv'
             },
             {
-                name: '',
-                boardId: '',
-                goodGroupIds: [''],
-                cityFieldId: ''
+                name: 'Upadłość Konsumencka',
+                boardId: '1425325850',
+                cityFieldId: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRBFzm8qAdobRJeiUdnGCEzxWBQIzHMZE8NOHuqtLbZTBnNg8UrSNoPiArmvk5IcCP47aSgeeQI-fjz/pub?gid=0&single=true&output=csv'
             },
             {
-                name: '',
-                boardId: '',
-                goodGroupIds: [''],
-                cityFieldId: ''
+                name: 'Real Estate Brokerage',
+                boardId: '1301678781',
+                clientsCsvUrl: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQxbF8yqlofuTbU3H1J8xVrimCwMBPFjz6OGO9g5fyfu1gpnyGjxZckri5JyWkaOsMj0-Dc_4WISFn2/pub?gid=0&single=true&output=csv'
             },
             {
-                name: '',
-                boardId: '',
-                goodGroupIds: [''],
-                cityFieldId: ''
+                name: 'Air conditioning',
+                boardId: '1297441890',
+                clientsCsvUrl: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR71y8KUbb4QGNXdT3sZrfeX9ElXqNSXYidJrIgOXXdK62WiOzcXcMhF6gGAmxwNlkHuYrbPYGv__gx/pub?gid=0&single=true&output=csv'
             },
             {
-                name: '',
-                boardId: '',
-                goodGroupIds: [''],
-                cityFieldId: ''
+                name: 'Interior Architecture',
+                boardId: '1380550342',
+                clientsCsvUrl: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSIXbPieBDTrJyANoXo4DKZ7PnJwpoMadCHQch0_qTv4nk87MmmDa6OI88FO2-VrYrWYq9G4b_Bhee1/pub?gid=0&single=true&output=csv'
             },
             {
-                name: '',
-                boardId: '',
-                goodGroupIds: [''],
-                cityFieldId: ''
+                name: 'Restrukturyzacja',
+                boardId: '1488425558',
+                clientsCsvUrl: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTE3rCMYqe8MWpAwVxk2jrfc7lBtgopMY0Mr8nltXDwDiHnEnz0A_TSI9KTAR8uvsFb842DLF27ZHFw/pub?gid=0&single=true&output=csv'
             },
             {
-                name: '',
-                boardId: '',
-                goodGroupIds: [''],
-                cityFieldId: ''
+                name: 'Mycie Wysokocisnieniowe',
+                boardId: '1492985411',
+                clientsCsvUrl: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSO9nyE765ADOQA6gzCQ61nRZ8df2YsQecic9iI_7b4ubTUFBvdINz2uPrEupNxf7OiVu2wpoh8JVwe/pub?gid=0&single=true&output=csv'
             },
             {
-                name: '',
-                boardId: '',
-                goodGroupIds: [''],
-                cityFieldId: ''
+                name: 'Hiszpania Nieruchomości',
+                boardId: '1502401021',
+                clientsCsvUrl: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT0kBhnifSX9knEhDC62XBLFF3NhBaM_H8m40cXyNUYzn8jqNQPUv-8cEyMQPP1d2T4DTEuD9qWkWci/pub?gid=0&single=true&output=csv'
             },
             {
-                name: '',
-                boardId: '',
-                goodGroupIds: [''],
-                cityFieldId: ''
+                name: 'Energia Elektryczna',
+                boardId: '1504535281',
+                clientsCsvUrl: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRAcuDyWS5Xx2hF0_gNnk054YjONO_CQq7OgzF-MqOQ1IRQ9J4gZ7Lgg8BTwHSS0Vp4tA9MRJ9hp7rl/pub?gid=0&single=true&output=csv'
             },
             {
-                name: '',
-                boardId: '',
-                goodGroupIds: [''],
-                cityFieldId: ''
-            },
-            {
-                name: '',
-                boardId: '',
-                goodGroupIds: [''],
-                cityFieldId: ''
-            },
-            {
-                name: '',
-                boardId: '',
-                goodGroupIds: [''],
-                cityFieldId: ''
+                name: 'Kredyty Dla Firm',
+                boardId: '1513295538',
+                clientsCsvUrl: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT-uD8Ajqj8q-h9c8uzoQL4wOmIGdFTwVVp0I1vEZM5ui1KlmEa48o6RCW7q1SAQjORGHpa_5TWDqli/pub?gid=0&single=true&output=csv'
             }
         ]
     },

@@ -78,7 +78,12 @@ map.on('load', () => {
             //find clients by region name
             let popupContent = 'Clients in Region: ' + regionName;
             popupContent += '<ul>';
-            clients.filter(cl => cl.regions.includes(regionName.trim().toLowerCase())).forEach(cn => {
+                
+            clients.filter(cl => 
+                                    cl.regions.includes(regionName.trim().toLowerCase())
+                                ||  cl.regions.includes(selectedCountry.name_pl.toLowerCase()) 
+                                ||  cl.regions.includes(selectedCountry.name.toLowerCase())
+                          ).forEach(cn => {
                 popupContent += `<li>
                                     ${cn.name} 
                                     ${checkClientNameWithBoardColumn(cn.name)} 
@@ -305,7 +310,7 @@ map.on('load', () => {
             // find matched clients by region
             if (matchedRegionName) {
                 if (clients && clients.length > 0) {
-                    matchedClients = clients.filter(c => c.regions.includes(matchedRegionName.trim().toLowerCase()));
+                    matchedClients = clients.filter(c => c.regions.includes(matchedRegionName.trim().toLowerCase()) || c.regions.includes(selectedCountry.name_pl.toLowerCase()) || c.regions.includes(selectedCountry.name.toLowerCase()) );
                 }
 
                 map.querySourceFeatures('client-buffers').forEach(currentFeature => {
@@ -393,7 +398,7 @@ function listCountries() {
                         padding: { top: 50, bottom: 50, left: 100, right: 50 }
                     });
                 });
-            selectedCountry = c.name;
+            selectedCountry = c;
             listIndustriesByCountry();
         });
     });
@@ -403,7 +408,7 @@ function listCountries() {
 function listIndustriesByCountry() {
     $('#industries').empty();
     $('#leads').empty();
-    countries.find(c => c.name == selectedCountry).industries.map(i => {
+    countries.find(c => c.name == selectedCountry.name).industries.map(i => {
         let industryItem = $(`<li>${i.name}</li>`);
         $('#industries').append(industryItem);
         industryItem.click(() => {
@@ -429,12 +434,14 @@ function listLeadsByIndustry() {
         </div>
     `);
     
-    let noteFieldId = columnsOfSelectedBoard.find(c => c.title == 'notatka').id;
-    let cityFieldId = columnsOfSelectedBoard.find(c => c.title == 'miejscowość').id;
+    let noteFieldId = columnsOfSelectedBoard.find(c => c.title == 'notatka' || c.title == 'notatki').id;
+    let cityFieldId = columnsOfSelectedBoard.find(c => c.title == 'miejscowość' || c.title == 'województwo' || c.title == 'lokalizacja' || c.title == 'region').id;
+    let goodGroupIds =  groupsOfSelectedBoard.filter(c => c.title.includes('good')).map(g => g.id);
+    console.log('goodGroupIds', goodGroupIds);
     let query = `query GetBoardItems{  
             boards(ids: [${selectedIndustry.boardId}]) {  
                 name
-                groups(ids: ["${selectedIndustry.goodGroupIds.join('","')}"]){
+                groups(ids: ["${goodGroupIds.join('","')}"]){
                     title
                     items_page(limit: 500) {  
                         items {  
@@ -482,7 +489,7 @@ function listLeadsByIndustry() {
                     name: li.name,
                     email: leadEmail,
                     city: leadCity,
-                    address: leadCity + ' ' + selectedCountry, 
+                    address: leadCity + ' ' + selectedCountry.name, 
                     note: leadNote
                 });
             });
@@ -520,10 +527,10 @@ function getClientsByIndustry() {
             download: true,
             header: true,
             complete: function (results) {
-                clients = results.data.filter(d => d['NAME']!='').map(d => {
+                clients = results.data.filter(d => d['NAME'].trim()!='').map(d => {
                     return {
                         name: d['NAME'],
-                        regions: d['REGION'] == '' ? [] : d['REGION'].trim().toLowerCase().split(','),
+                        regions: (d['REGION'].trim() == '' || d['REGION'].trim() == '-') ? [] : d['REGION'].trim().toLowerCase().split(',').map(c=>c.trim()),
                         city: d['CITY'] == '' ? null : d['CITY'],
                         cityBufferKm: d['BUFFER IN KM'] == '' ? null : Number(d['BUFFER IN KM']),
                         orderedLeads: d['ORDERED LEADS'] == '' ? null : Number(d['ORDERED LEADS']),
@@ -674,12 +681,14 @@ $clientsTable.bootstrapTable({
 });
 
 function regionFormatter(value, row) {
-    if(value && value.length > 0){
-        return value.map(region => initcap(region)).join(', ');
+    let regionsText='';
+    if(value && value.filter(region => region.trim() != '-').length > 0){
+        regionsText += value.map(region => initcap(region)).join(', ');
     }
-    else {
-        return row.city +' + '+row.cityBufferKm + 'km';
+    if(row.city && row.city !='') {
+        regionsText +=  row.city +' + '+row.cityBufferKm + 'km';
     }
+    return regionsText;
 }
 
 function clientNameFormatter(value, row) {
@@ -810,14 +819,14 @@ function getBoardDetails(callback) {
 
 function getCityCoordinatesOfClients() {
     let clientsWithCity = clients.filter(c => c.city && c.city != '');
-    createAddressIfNotExist(clientsWithCity.map(c => c.city + ' ' + selectedCountry), function () {
+    createAddressIfNotExist(clientsWithCity.map(c => c.city + ' ' + selectedCountry.name), function () {
         polulateClientCoordinates();
     });
 }
 
 function polulateClientCoordinates() {
     let clientsWithCity = clients.filter(c => c.city && c.city != '');
-    let uniqueAdresses = clientsWithCity.map(c => c.city + ' ' + selectedCountry);
+    let uniqueAdresses = clientsWithCity.map(c => c.city + ' ' + selectedCountry.name);
     uniqueAdresses = uniqueAdresses.filter(onlyUnique);
 
     const batches = [];
@@ -842,7 +851,7 @@ function polulateClientCoordinates() {
     Promise.all(batches)
         .then(content => {
             content.flat().forEach(addressData => {
-                clientsWithCity.filter(c => c.city + ' ' + selectedCountry == addressData.address).forEach(c => {
+                clientsWithCity.filter(c => c.city + ' ' + selectedCountry.name == addressData.address).forEach(c => {
                     c['latitude'] = addressData.latitude;
                     c['longitude'] = addressData.longitude;
                 });
@@ -865,11 +874,13 @@ function polulateClientCoordinates() {
 
 
 function checkMondayToken(){
+    $('#authenticate-spinner').show();
     monday.api(`query { users { id, name } }`, {
         apiVersion: '2023-10',
         token: mondayToken
     }).then(res => {
         console.log(res);
+        $('#authenticate-spinner').hide();
     }).catch(err => {
         localStorage.removeItem('monday-token');
         mondayToken = null;
@@ -953,4 +964,3 @@ function populateClientTotalLeadsOnMapPopup(){
 // Status = Send
 // ClientColumn = Wysłany
 // Move to 'Send' group
-
