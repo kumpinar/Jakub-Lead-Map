@@ -74,26 +74,31 @@ map.on('load', () => {
         ]);
 
         if (clients) {
+            let popupContent ='';
 
-            //find clients by region name
-            let popupContent = 'Clients in Region: ' + regionName;
-            popupContent += '<ul>';
+            e.features.forEach(regionFeature => {
+
+                //find clients by region name
+                popupContent += 'Clients in Region: ' + regionFeature.properties.name;
+                popupContent += '<ul>';
+                    
+                clients.filter(cl => 
+                                        cl.regions.includes(regionFeature.properties.name.trim().toLowerCase())
+                                    ||  cl.regions.includes(selectedCountry.name_pl.toLowerCase()) 
+                                    ||  cl.regions.includes(selectedCountry.name.toLowerCase())
+                            ).forEach(cn => {
+                    popupContent += `<li>
+                                        ${cn.name} 
+                                        ${checkClientNameWithBoardColumn(cn.name)} 
+                                        <div client-name="${encodeURIComponent(cn.name)}" class="spinner-border client-total-leads-spinner" role="status">
+                                            <span class="visually-hidden">Loading...</span>
+                                        </div> 
+                                        <span client-name="${encodeURIComponent(cn.name)}" class="badge rounded-pill text-bg-info lead-count"></span>
+                                    </li>`;
+                });
+                popupContent += '</ul>';
                 
-            clients.filter(cl => 
-                                    cl.regions.includes(regionName.trim().toLowerCase())
-                                ||  cl.regions.includes(selectedCountry.name_pl.toLowerCase()) 
-                                ||  cl.regions.includes(selectedCountry.name.toLowerCase())
-                          ).forEach(cn => {
-                popupContent += `<li>
-                                    ${cn.name} 
-                                    ${checkClientNameWithBoardColumn(cn.name)} 
-                                     <div client-name="${encodeURIComponent(cn.name)}" class="spinner-border client-total-leads-spinner" role="status">
-                                        <span class="visually-hidden">Loading...</span>
-                                    </div> 
-                                    <span client-name="${encodeURIComponent(cn.name)}" class="badge rounded-pill text-bg-info lead-count"></span>
-                                </li>`;
             });
-            popupContent += '</ul>';
 
             const bufferedClients = map.queryRenderedFeatures(e.point,{layers: ['client-buffers-layer']});
 
@@ -295,8 +300,8 @@ map.on('load', () => {
             map.getCanvas().style.cursor = '';
         });
         map.on('click', 'leads-layer', (e) => {
-            matchedRegionName = null;
-            matchedClients = null;
+            matchedRegionNames = [];
+            matchedClients = [];
             const features = map.queryRenderedFeatures(e.point, {
                 layers: ['leads-layer']
             });
@@ -304,13 +309,16 @@ map.on('load', () => {
             selectedLead = features[0];
             turf.featureEach(regionsGeojson, function (currentFeature, featureIndex) {
                 if (turf.booleanWithin(selectedLead, currentFeature)) {
-                    matchedRegionName = currentFeature.properties.name;
+                    matchedRegionNames.push(currentFeature.properties.name);
                 }
             });
             // find matched clients by region
-            if (matchedRegionName) {
+            if (matchedRegionNames.length > 0) {
                 if (clients && clients.length > 0) {
-                    matchedClients = clients.filter(c => c.regions.includes(matchedRegionName.trim().toLowerCase()) || c.regions.includes(selectedCountry.name_pl.toLowerCase()) || c.regions.includes(selectedCountry.name.toLowerCase()) );
+                    matchedRegionNames.forEach(matchedRegionName => {
+                        let mr = clients.filter(c => c.regions.includes(matchedRegionName.trim().toLowerCase()) || c.regions.includes(selectedCountry.name_pl.toLowerCase()) || c.regions.includes(selectedCountry.name.toLowerCase()) ); 
+                        matchedClients = matchedClients.concat(mr); 
+                    });
                 }
 
                 map.querySourceFeatures('client-buffers').forEach(currentFeature => {
@@ -325,7 +333,7 @@ map.on('load', () => {
 
 
                 $('#tdSelectedLead').html(features[0].properties.name);
-                $('#tdRegionOfSelectedLead').html(matchedRegionName);
+                $('#tdRegionOfSelectedLead').html(matchedRegionNames.join(', '));
                 $('#tdLeadNotes').html(features[0].properties.note.trim('"'));
             }
 
@@ -434,7 +442,7 @@ function listLeadsByIndustry() {
         </div>
     `);
     
-    let noteFieldId = columnsOfSelectedBoard.find(c => c.title == 'notatka' || c.title == 'notatki').id;
+    let noteFieldId = columnsOfSelectedBoard.find(c => c.title == 'notatka' || c.title == 'notatki' || c.title == 'notes' || c.title == 'type of property'  ).id;
     let cityFieldId = columnsOfSelectedBoard.find(c => c.title == 'miejscowość' || c.title == 'województwo' || c.title == 'lokalizacja' || c.title == 'region').id;
     let goodGroupIds =  groupsOfSelectedBoard.filter(c => c.title.includes('good')).map(g => g.id);
     console.log('goodGroupIds', goodGroupIds);

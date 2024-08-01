@@ -3,8 +3,8 @@ const countries = [
         name: 'Poland',
         name_pl: 'Polska',
         code: 'pl',
-        regionBordersUrl: 'data/poland.json',
-        regionLabelsUrl: 'data/poland-labels.json',
+        regionBordersUrl: 'data/poland.json?override_cache=deploy_version',
+        regionLabelsUrl: 'data/poland-labels.json?override_cache=deploy_version',
         industries: [
             {
                 name: 'Photovoltaic',
@@ -80,11 +80,21 @@ const countries = [
     },
     {
         name: 'Spain',
+        name_pl: 'Spain',
         code: 'es',
-        regionBordersUrl: 'data/spain.json',
-        regionLabelsUrl: 'data/spain-labels.json',
+        regionBordersUrl: 'data/spain.json?override_cache=deploy_version',
+        regionLabelsUrl: 'data/spain-labels.json?override_cache=deploy_version',
         industries: [
-
+            {
+                name: 'Photovoltaic',
+                boardId: '1301398021',
+                clientsCsvUrl:  'https://docs.google.com/spreadsheets/d/e/2PACX-1vT3ttlITYNcezgWgKPGjwaJadcE_X6xXkTvmcNPrbJLLtKU11ygB6ia6rh3ldLKuf2zFdTs88sSse3X/pub?gid=0&single=true&output=csv'
+            },
+            {
+                name: 'Real Estate',
+                boardId: '1486362709',
+                clientsCsvUrl:  'https://docs.google.com/spreadsheets/d/e/2PACX-1vRSNPxxGmPJ3-wH2lG8cMtv9ppYS33vRofhhRu4hlV-UO9EMiOIJLx0SvYBDwtfT_AFfBzSVEC0MRxz/pub?gid=0&single=true&output=csv'
+            }
         ]
     },
     {
