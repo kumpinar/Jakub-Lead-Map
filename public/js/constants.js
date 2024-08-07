@@ -98,12 +98,35 @@ const countries = [
         ]
     },
     {
+        name: 'France',
+        name_pl: 'France',
+        code: 'fr',
+        regionBordersUrl: 'data/france.json',
+        industries: [
+            {
+                name: 'Photovoltaic',
+                boardId: '1587738740',
+                clientsCsvUrl: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTBku503RZH8jZvMLCcNXecu0F5DtoupuMMTCjVD0yNjazgeq5zW3KDLKNUFwLGeb8QIq4ob9wYMt9i/pub?gid=0&single=true&output=csv'
+            }
+        ]
+    },
+    {
         name: 'Germany',
+        name_pl: 'Germany',
         code: 'de',
         regionBordersUrl: 'data/germany.json',
         regionLabelsUrl: 'data/germany-labels.json',
         industries: [
-
+            {
+                name: 'Photovoltaic',
+                boardId: '1299880499',
+                clientsCsvUrl: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSKMn1ATKbL8U-LrHcOCL6LfKVxQxROOZvsJomQuHd8uMne3A-EiQYFqTRVVKRgzkMS1mWM6eP9hSmj/pub?gid=0&single=true&output=csv'
+            },
+            {
+                name: 'Heat Pumps',
+                boardId: '1509270654',
+                clientsCsvUrl: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTbvWtWKK6w1SR9fBsIO4p51RKdplq-xetOB447flaAMbMAxv-sizUU8k5DnPVy6xApM_AZUjxw4fL3/pub?gid=0&single=true&output=csv'
+            }
         ]
     },
     {

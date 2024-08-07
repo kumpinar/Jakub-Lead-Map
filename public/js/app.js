@@ -393,7 +393,9 @@ function listCountries() {
         countryItem.click(() => {
 
             map.getSource('regions').setData(c.regionBordersUrl);
-            map.getSource('labels').setData(c.regionLabelsUrl);
+            if(c.regionLabelsUrl && c.regionLabelsUrl!=''){
+                map.getSource('labels').setData(c.regionLabelsUrl);
+            }
             map.getSource('leads').setData({ "type": "FeatureCollection", "features": [] });
             map.getSource('client-buffers').setData({ "type": "FeatureCollection", "features": [] });
 
@@ -442,8 +444,8 @@ function listLeadsByIndustry() {
         </div>
     `);
     
-    let noteFieldId = columnsOfSelectedBoard.find(c => c.title == 'notatka' || c.title == 'notatki' || c.title == 'notes' || c.title == 'type of property'  ).id;
-    let cityFieldId = columnsOfSelectedBoard.find(c => c.title == 'miejscowość' || c.title == 'województwo' || c.title == 'lokalizacja' || c.title == 'region').id;
+    let noteFieldId = columnsOfSelectedBoard.find(c => c.title == 'notatka' || c.title == 'notatki' || c.title == 'notes' || c.title == 'type of property' || c.title ==  'type of ad' || c.title ==  'typ reklamy').id;
+    let cityFieldId = columnsOfSelectedBoard.find(c => c.title == 'miejscowość' || c.title == 'województwo' || c.title == 'lokalizacja' || c.title == 'region' || c.title == 'city/ postal code').id;
     let goodGroupIds =  groupsOfSelectedBoard.filter(c => c.title.includes('good')).map(g => g.id);
     console.log('goodGroupIds', goodGroupIds);
     let query = `query GetBoardItems{  
