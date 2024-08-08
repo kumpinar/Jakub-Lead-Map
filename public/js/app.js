@@ -544,8 +544,10 @@ function getClientsByIndustry() {
                         city: d['CITY'] == '' ? null : d['CITY'],
                         cityBufferKm: d['BUFFER IN KM'] == '' ? null : Number(d['BUFFER IN KM']),
                         orderedLeads: d['ORDERED LEADS'] == '' ? null : Number(d['ORDERED LEADS']),
+                        status: d['STATUS'] ? ( d['STATUS'].trim().toLowerCase()=='yes' ? true : false ) : true,
                     }
                 });
+                clients = clients.filter(c=>c.status==true);
                 getCityCoordinatesOfClients();
             }
         });
