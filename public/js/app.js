@@ -334,7 +334,7 @@ map.on('load', () => {
 
                 $('#tdSelectedLead').html(features[0].properties.name);
                 $('#tdRegionOfSelectedLead').html(matchedRegionNames.join(', '));
-                $('#tdLeadNotes').html(features[0].properties.note.trim('"'));
+                $('#tdLeadNotes').html(features[0].properties.note?.trim('"'));
             }
 
 
