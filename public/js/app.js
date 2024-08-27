@@ -930,7 +930,7 @@ function getNumberOfSendLeads(clientName, spinnerElement) {
         let query = `
             query {
                 boards (ids: ${selectedIndustry.boardId}) {
-                    items_page (query_params: {rules: [{column_id: "${clientFieldId}", compare_value: 1 }]}) {
+                    items_page (query_params: {rules: [{column_id: "${clientFieldId}", compare_value: 1 }]}, limit:500) {
                     items {
                         id
                         name
@@ -939,7 +939,7 @@ function getNumberOfSendLeads(clientName, spinnerElement) {
                 }
             }
             `;
-
+            
         monday.api(query, {
             apiVersion: '2023-10',
             token: mondayToken
