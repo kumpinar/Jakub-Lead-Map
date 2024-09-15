@@ -34,7 +34,7 @@ const countries = [
             {
                 name: 'Upadłość Konsumencka',
                 boardId: '1425325850',
-                cityFieldId: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRBFzm8qAdobRJeiUdnGCEzxWBQIzHMZE8NOHuqtLbZTBnNg8UrSNoPiArmvk5IcCP47aSgeeQI-fjz/pub?gid=0&single=true&output=csv'
+                clientsCsvUrl: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRBFzm8qAdobRJeiUdnGCEzxWBQIzHMZE8NOHuqtLbZTBnNg8UrSNoPiArmvk5IcCP47aSgeeQI-fjz/pub?gid=0&single=true&output=csv'
             },
             {
                 name: 'Real Estate Brokerage',
