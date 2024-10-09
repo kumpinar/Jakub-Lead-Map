@@ -75,6 +75,16 @@ const countries = [
                 name: 'Kredyty Dla Firm',
                 boardId: '1513295538',
                 clientsCsvUrl: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT-uD8Ajqj8q-h9c8uzoQL4wOmIGdFTwVVp0I1vEZM5ui1KlmEa48o6RCW7q1SAQjORGHpa_5TWDqli/pub?gid=0&single=true&output=csv'
+            },
+            {
+                name: 'Obsługa Prawna Firm',
+                boardId: '1535731255',
+                clientsCsvUrl: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSbwoBIiQ4qpXZntcl5nLBlmH7GriFstHn6FVeNJb6d6TvH5Q60p-rymqXyZ807B-vqAMgGAU83p9Ny/pub?gid=0&single=true&output=csv'
+            },
+            {
+                name: 'Leasing',
+                boardId: '1653725752',
+                clientsCsvUrl: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSPlzbrokxmZCnG7CzqnTGZc-2nf0VLRc7xTy4DqLQO0ri25pwd1yP5jlmgfId9hXKChA3pAOB5W75d/pub?gid=0&single=true&output=csv'
             }
         ]
     },
