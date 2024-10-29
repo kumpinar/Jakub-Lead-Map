@@ -478,30 +478,32 @@ function listLeadsByIndustry() {
             g.items_page.items.map(li => {
                 let leadEmail = JSON.parse(li.column_values.filter(cv => cv.id == 'email' || cv.id == 'lead_email')[0].value)?.email;
                 let leadCity = '';
-                const cityColumn = li.column_values.filter(cv => cv.id == cityFieldId)[0].value;
-                if (cityColumn.startsWith('{')) {
-                    leadCity = JSON.parse(cityColumn).text;
+                const cityColumn = li.column_values.filter(cv => cv.id == cityFieldId)[0].value?.replace(/^["']|["']$/g, '');
+                if (cityColumn) {
+                    if (cityColumn.startsWith('{')) {
+                        leadCity = JSON.parse(cityColumn).text;
+                    }
+                    else {
+                        leadCity = cityColumn
+                    }
+
+                    leadCity = leadCity.replaceAll('\"', '');
+                    leadNote = li.column_values.filter(cv => cv.id == noteFieldId)[0].value;
+                    try {
+                        let noteJson=JSON.parse(leadNote);
+                        if(noteJson.text) leadNote = noteJson.text;
+                    } catch (e) {}
+
+
+                    selectedLeads.push({
+                        id: li.id,
+                        name: li.name,
+                        email: leadEmail,
+                        city: leadCity,
+                        address: leadCity + ' ' + selectedCountry.name, 
+                        note: leadNote
+                    });
                 }
-                else {
-                    leadCity = cityColumn
-                }
-
-                leadCity = leadCity.replaceAll('\"', '');
-                leadNote = li.column_values.filter(cv => cv.id == noteFieldId)[0].value;
-                try {
-                    let noteJson=JSON.parse(leadNote);
-                    if(noteJson.text) leadNote = noteJson.text;
-                } catch (e) {}
-
-
-                selectedLeads.push({
-                    id: li.id,
-                    name: li.name,
-                    email: leadEmail,
-                    city: leadCity,
-                    address: leadCity + ' ' + selectedCountry.name, 
-                    note: leadNote
-                });
             });
 
         });
