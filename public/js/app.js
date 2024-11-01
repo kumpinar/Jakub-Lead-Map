@@ -305,6 +305,11 @@ map.on('load', () => {
             const features = map.queryRenderedFeatures(e.point, {
                 layers: ['leads-layer']
             });
+            //clear the fields
+            $('#tdSelectedLead').html('');
+            $('#tdRegionOfSelectedLead').html('');
+            $('#tdLeadNotes').html('');
+            
             // find region of lead
             selectedLead = features[0];
             turf.featureEach(regionsGeojson, function (currentFeature, featureIndex) {
