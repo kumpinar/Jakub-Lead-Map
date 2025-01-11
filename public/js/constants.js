@@ -85,6 +85,21 @@ const countries = [
                 name: 'Leasing',
                 boardId: '1653725752',
                 clientsCsvUrl: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSPlzbrokxmZCnG7CzqnTGZc-2nf0VLRc7xTy4DqLQO0ri25pwd1yP5jlmgfId9hXKChA3pAOB5W75d/pub?gid=0&single=true&output=csv'
+            },
+            {
+                name: 'Kredyty Hipoteczne',
+                boardId: '1770892667',
+                clientsCsvUrl: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRterdToWuyvAFRRynrOz_Bp_i9Zmh4ek0fUfWDbx7X1QOUI248gt7l9KuU22HQNJtscDMyHM-VJ9E9/pub?gid=0&single=true&output=csv'
+            },
+            {
+                name: 'Odszkodowania Osobowe',
+                boardId: '1719429369',
+                clientsCsvUrl: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTUuKrPne0myl4Iu-Qa2iDlJcBaUoakPhMUuoRiFOoPMRfxWnJhZmUycl7XQBroFWZZGf6Fd0e4EK9t/pub?gid=0&single=true&output=csv'
+            },
+            {
+                name: 'Ubezpieczenia',
+                boardId: '1769398620',
+                clientsCsvUrl: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQIuP-V5gSR-swqOK5FzpJpJx3lxnGEHnXLsKXQu5Thi3E83hjjQZYUNH10ANc74HBK04BkcrMfwBW1/pub?gid=0&single=true&output=csv'
             }
         ]
     },
