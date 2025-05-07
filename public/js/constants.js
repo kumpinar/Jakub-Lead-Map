@@ -100,6 +100,11 @@ const countries = [
                 name: 'Ubezpieczenia',
                 boardId: '1769398620',
                 clientsCsvUrl: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQIuP-V5gSR-swqOK5FzpJpJx3lxnGEHnXLsKXQu5Thi3E83hjjQZYUNH10ANc74HBK04BkcrMfwBW1/pub?gid=0&single=true&output=csv'
+            },
+            {
+                name: 'App development',
+                boardId: '1723985411',
+                clientsCsvUrl: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTuiTAK2M7mYR2WFVEaADkZWJyGo9UayuQQizwA4XCQ6CMEGdLS2npmt0BiZyMvY7WmD55p85VeqUAv/pub?gid=0&single=true&output=csv',
             }
         ]
     },
