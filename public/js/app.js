@@ -363,7 +363,39 @@ map.on('load', () => {
 
 const monday = window.mondaySdk();
 
+// Proxy function to avoid CORS issues in production
+async function mondayApiProxy(query, options) {
+    const proxyUrl = 'https://us-central1-lemon-lead-map.cloudfunctions.net/mondayProxy';
+    
+    try {
+        const response = await fetch(proxyUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                query: query,
+                token: options.token,
+                apiVersion: options.apiVersion || '2023-10'
+            })
+        });
+        
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'API request failed');
+        }
+        
+        return await response.json();
+    } catch (error) {
+        throw error;
+    }
+}
 
+// Wrapper function that uses proxy in production, direct API in development
+function mondayApi(query, options) {
+    // Use proxy for all environments to avoid CORS issues
+    return mondayApiProxy(query, options);
+}
 
 function toggleSidebar(id) {
     const elem = document.getElementById(id);
@@ -449,7 +481,7 @@ function listLeadsByIndustry() {
         </div>
     `);
     
-    let noteFieldId = columnsOfSelectedBoard.find(c => c.title == 'notatka' || c.title == 'notatki' || c.title == 'notes' || c.title == 'type of property' || c.title ==  'type of ad' || c.title ==  'typ reklamy').id;
+    let noteFieldId = columnsOfSelectedBoard.find(c => c.title == 'notatka' || c.title == 'notatki' || c.title == 'notes' || c.title == 'type of property' || c.title ==  'type of ad' || c.title ==  'typ reklamy' || c.title == 'jaki system ogrzewania cię interesuje?').id;
     let cityFieldId = columnsOfSelectedBoard.find(c => c.title == 'miejscowość' || c.title == 'województwo' || c.title == 'lokalizacja' || c.title == 'region' || c.title == 'city/ postal code' || c.title == 'postal code' || c.title == 'city').id;
     let goodGroupIds =  groupsOfSelectedBoard.filter(c => c.title.includes('good')).map(g => g.id);
     console.log('goodGroupIds', goodGroupIds);
@@ -472,7 +504,7 @@ function listLeadsByIndustry() {
             }  
         }`;
 
-    monday.api(query, {
+    mondayApi(query, {
         apiVersion: '2023-10',
         token: mondayToken
     }).then(res => {
@@ -763,7 +795,7 @@ $('#btnSendLeadToClients').click(() => {
                                     }
                                 }`;
 
-                monday.api(query, {
+                mondayApi(query, {
                     apiVersion: '2023-10',
                     token: mondayToken
                 }).then(res => {
@@ -807,7 +839,7 @@ function getBoardDetails(callback) {
                 }   
                 `;
 
-    monday.api(query, {
+    mondayApi(query, {
         apiVersion: '2023-10',
         token: mondayToken
     }).then(res => {
@@ -894,7 +926,7 @@ function polulateClientCoordinates() {
 
 function checkMondayToken(){
     $('#authenticate-spinner').show();
-    monday.api(`query { users { id, name } }`, {
+    mondayApi(`query { users { id, name } }`, {
         apiVersion: '2023-10',
         token: mondayToken
     }).then(res => {
@@ -947,7 +979,7 @@ function getNumberOfSendLeads(clientName, spinnerElement) {
             }
             `;
             
-        monday.api(query, {
+        mondayApi(query, {
             apiVersion: '2023-10',
             token: mondayToken
         }).then(res => {
