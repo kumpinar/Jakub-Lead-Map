@@ -969,7 +969,7 @@ function getNumberOfSendLeads(clientName, spinnerElement) {
         let query = `
             query {
                 boards (ids: ${selectedIndustry.boardId}) {
-                    items_page (query_params: {rules: [{column_id: "${clientFieldId}", compare_value: 1 }]}, limit:500) {
+                    items_page (query_params: {rules: [{column_id: "${clientFieldId}", compare_value: 1 }, {column_id: "__last_updated__", compare_value: ["THIS_MONTH"], compare_attribute: "UPDATED_AT"} ]}, limit:500) {
                     items {
                         id
                         name
